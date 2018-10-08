@@ -195,7 +195,7 @@ def group(chat_id, msg_id, callback_id):
     menü += "[{\"text\":\"#springer\", \"callback_data\":\"springer\"}],"
 
     # Steuerfunktionen
-    menü += "[{\"text\":\"Haupmenü\", \"callback_data\":\"haupt\"}]]}"
+    menü += "[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
 
     display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Gruppe um ihnen eine Nachricht zu senden", reply_markup=menü)
 
@@ -212,7 +212,7 @@ def info(chat_id, msg_id, callback_id):
         menu = menu + "[{\"text\":\"" + info + "\", \"callback_data\":\"info" + hashlib.md5(info.encode()).hexdigest() + "\"}],"
 
     # Steuerfunktionen
-    menu = menu + "[{\"text\":\"Infos hinzufügen\", \"callback_data\":\"infotexthinzufügen\"},{\"text\":\"Infos entfernen\",\"callback_data\":\"infolöschen\"}],[{\"text\":\"Haupmenü\", \"callback_data\":\"haupt\"}]]}"
+    menu = menu + "[{\"text\":\"Infos hinzufügen\", \"callback_data\":\"infotexthinzufügen\"},{\"text\":\"Infos entfernen\",\"callback_data\":\"infolöschen\"}],[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
 
     display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=menu)
 
@@ -233,7 +233,7 @@ def door(chat_id, msg_id, callback_id):
 def help_button(chat_id, msg_id, callback_id):
     bot.answerCallbackQuery(callback_id)
 
-    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Haupmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
+    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
 
     for tag in data["chats"]:
         help_str += tag + ", "
@@ -244,7 +244,7 @@ def help_button(chat_id, msg_id, callback_id):
     display_message = bot.editMessageText((chat_id, msg_id), help_str, reply_markup=json.dumps(menüs["nachrichten"]))
 
 def help_chat(chat_id):
-    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Haupmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
+    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
 
     for tag in data["chats"]:
         help_str += tag + ", "
@@ -271,6 +271,7 @@ def jumper(chat_id, msg_id, callback_id):
     display_message = bot.editMessageText((chat_id, msg_id), "Schick mir bitte deine Nachricht, dann leite ich sie weiter an " + aktuelle_springer, reply_markup=json.dumps(menüs["nachrichten"]))
 
 def key(chat_id, msg_id, callback_id):
+    global users
     bot.answerCallbackQuery(callback_id)
 
     users[str(chat_id)]["menue"] = ME_SCHLÜSSEL
@@ -307,15 +308,24 @@ def shoplist(chat_id, msg_id, callback_id):
     for item in data["einkaufsliste"]:
         liste_text = liste_text + "\n - " + item
 
-    display_message = bot.editMessageText((chat_id, msg_id), liste_text, reply_markup=json.dumps(menüs["einkaufliste"]))
+    display_message = bot.editMessageText((chat_id, msg_id), liste_text, reply_markup=json.dumps(menüs["einkaufliste"]), parse_mode="Markdown")
 
 def addkey(chat_id, msg_id, callback_id):
     global users
+    warning = ""
+
+    anzahl_schlüsselträger = 0
+    for user in users:
+        if users[user]["is_schlüsselträger"]:
+            anzahl_schlüsselträger += 1
+
+    if anzahl_schlüsselträger >= 4: #TODO Cedric
+        warning = "\nSo viele Schlüssel gibt es nicht! Erinnere den letzten Schlüsselträger daran, sich zu entfernen."
 
     users[str(chat_id)]["is_schlüsselträger"] = True
     save("Daten/users.json", users)
 
-    bot.answerCallbackQuery(callback_id, text="Du wurdest als Schlüsselträger hinzugefügt", show_alert=True)
+    bot.answerCallbackQuery(callback_id, text="Du wurdest als Schlüsselträger hinzugefügt" + warning, show_alert=True)
 
 
     mainmenu(chat_id, msg_id, callback_id)
@@ -500,13 +510,16 @@ def chat_passwort(chat_id, txt):
 
 def chat_gruppen(chat_id, txt, msg_id):
     global display_message
+    global data
 
-    bot.forwardMessage(users[str(chat_id)]["forward_to"], chat_id, msg_id)
-    if users[str(chat_id)]["forward_to"] > 0: # only for private chats
-        bot.sendMessage(users[str(chat_id)]["forward_to"], "Hauptmenü", reply_markup=json.dumps(menüs["nachrichten"]))
+    try:
+        bot.forwardMessage(users[str(chat_id)]["forward_to"], chat_id, msg_id)
+        if users[str(chat_id)]["forward_to"] > 0: # only for private chats
+            bot.sendMessage(users[str(chat_id)]["forward_to"], "Hauptmenü", reply_markup=json.dumps(menüs["nachrichten"]))
 
-
-    display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
+        display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
+    except telepot.exception.BotWasKickedError:
+        display_message = bot.sendMessage(chat_id, "Sorry, aber die Gruppe gibt es nicht mehr. Bitte melde dich bei " + SUPPORTTEAM + ".", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def chat_springer(chat_id, txt, msg_id):
     global display_message
@@ -536,18 +549,20 @@ def chat_schuldenzahlen(chat_id, txt):
     global users
     global display_message
     aktuelle_schulden = users[str(chat_id)]["schulden"]
+    #aktuelle_schulden = round(aktuelle_schulden, 2)
 
     try:
         betrag = abs(float(txt.replace(",", ".").replace("€", "")))
+        #betrag = round(betrag, 2)
 
         if aktuelle_schulden - betrag < 0:
             display_message = bot.sendMessage(chat_id, "Du schuldest dem Faust " + str(aktuelle_schulden).replace(".", ",") + "€. Du kannst nicht mehr zurückzahlen, als du dem Faust schuldest. Bitte sende mir den zurückgezahlten Betrag als Kommazahl", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
         else:
-            users[str(chat_id)]["schulden"] = aktuelle_schulden - betrag
-            users[str(chat_id)]["modus"] = MO_NORMAL
+            users[str(chat_id)]["schulden"] = round(aktuelle_schulden - betrag, 2)
+            users[str(chat_id)]["modus"] = MO_SCHULDENZAHLEN
             save("Daten/users.json", users)
 
-            display_message = bot.sendMessage(chat_id, "Von deiner Schuldenliste wurden " + str(betrag).replace(".", ",") + "€ gestrichen. Du schuldest dem Faust noch " + str(aktuelle_schulden-betrag).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
+            display_message = bot.sendMessage(chat_id, "Von deiner Schuldenliste wurden " + str(betrag).replace(".", ",") + "€ gestrichen. Du schuldest dem Faust noch " + str(round(aktuelle_schulden-betrag,2)).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["schuldenbegleichen"]))
 
     except ValueError as e:
         display_message = bot.sendMessage(chat_id, "Bitte sende mir deine Schulden entweder als ganze Zahl _10_, bzw. Kommazahl im Format:  _1,2_ oder _1.2_. Deine aktuellen Schulden sind: _" + str(aktuelle_schulden).replace(".", ",") + "€_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
@@ -560,11 +575,11 @@ def chat_schuldenmachen(chat_id, txt):
     try:
         betrag = abs(float(txt.replace(",", ".").replace("€", "")))
 
-        users[str(chat_id)]["schulden"] = aktuelle_schulden + betrag
-        users[str(chat_id)]["modus"] = MO_NORMAL
+        users[str(chat_id)]["schulden"] = round(aktuelle_schulden + betrag, 2)
+        users[str(chat_id)]["modus"] = MO_SCHULDENMACHEN
         save("Daten/users.json", users)
 
-        display_message = bot.sendMessage(chat_id, "Zu deinen Schulden wurden " + str(betrag).replace(".", ",") + "€ addiert. Du schuldest dem Faust noch " + str(aktuelle_schulden+betrag).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
+        display_message = bot.sendMessage(chat_id, "Zu deinen Schulden wurden " + str(betrag).replace(".", ",") + "€ addiert. Du schuldest dem Faust noch " + str(aktuelle_schulden+betrag).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["schulden"]))
 
     except ValueError as e:
         display_message = bot.sendMessage(chat_id, "Bitte sende mir deine Schulden entweder als ganze Zahl _10_, bzw. Kommazahl im Format:  _1,2_ oder _1.2_. Deine aktuellen Schulden sind: _" + str(aktuelle_schulden).replace(".", ",") + "€_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
@@ -589,7 +604,9 @@ def chat_einkaeufe(chat_id, txt):
         if txt in data["einkaufsliste"]:
             display_message = bot.sendMessage(chat_id, "_" + txt + "_ ist schon auf der Einkaufsliste. Aber schick mir gerne weitere Artikel...", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
         else:
-            data["einkaufsliste"].append(txt)
+            artikel = txt + " (von " + users[str(chat_id)]["name"] + ")"
+
+            data["einkaufsliste"].append(artikel)
             save("Daten/data.json", data)
             display_message = bot.sendMessage(chat_id, "_" + txt + "_ wurde zur Einkaufsliste hinzugefügt. Schick mir gerne weitere Artikel...", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
 
@@ -642,16 +659,20 @@ def chat_normal(chat_id, txt, msg):
                     if data["chats"][tag][0] !=str(chat_id):
                         group_id = data["chats"][tag][0]
                         group_name = data["chats"][tag][1]
-                        approved.append(group_name)
-                        bot.forwardMessage(group_id, chat_id, msg["message_id"])
-                        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet an <i>" + group_name + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
-                        if "reply_to_message" in msg:
-                            bot.forwardMessage(group_id, chat_id, msg["reply_to_message"]["message_id"])
+
+                        try:
+                            bot.forwardMessage(group_id, chat_id, msg["message_id"])
                             bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet an <i>" + group_name + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
+                            if "reply_to_message" in msg:
+                                bot.forwardMessage(group_id, chat_id, msg["reply_to_message"]["message_id"])
+                                bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet an <i>" + group_name + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
+                            approved.append(group_name)
+                        except telepot.exception.BotWasKickedError:
+                            rejected.append(tag)
                 else:
                     rejected.append(tag)
             if len(rejected) > 0:
-                bot.sendMessage(chat_id,"Ich konnte leider an folgende Tags keine Nachricht senden: <i>" + ", ".join(rejected) + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["error"]))
+                bot.sendMessage(chat_id,"Ich konnte leider an folgende Tags keine Nachricht senden: <i>" + ", ".join(rejected) + "</i>\nFalls der Tag trotzdem in Gruppen angezeigt wird, wurde die Gruppe gelöscht bitte melde dich in diesem Fall bei " + SUPPORTTEAM + "." , parse_mode="HTML", reply_markup=json.dumps(menüs["error"]))
         else:
             # Fehler, weil leere Nachricht mit Tags
             bot.sendMessage(chat_id, "Du kannst keine leeren Nachrichten senden. Bitte sende mir eine Nachricht mit den Tags", reply_markup=json.dumps(menüs["error"]))
@@ -666,7 +687,6 @@ def handle(msg):
     global data
 
     flavor = telepot.flavor(msg)
-
 
 
 ##################################
@@ -822,9 +842,6 @@ def handle(msg):
             elif modus == MO_ADD_INFO_TEXT:
                 chat_add_info(chat_id, txt)
 
-            else:
-                print("Schlechte Eingabe")
-
 
         elif msg["chat"]["type"] == "group":
 
@@ -953,7 +970,7 @@ def handle(msg):
 
             if menue[:23] == "einkaufsliste/entfernen":
                 if dellitem(chat_id, msg_id, callback_id, button):
-                    print("Artikel von Eikaufsliste gelöscht")
+                    pass
 
                 elif button == "alleslöschen":
                     dellshoplist(chat_id, msg_id, callback_id)
@@ -972,7 +989,7 @@ def handle(msg):
 
         elif menue == "gruppen":
             if msggroup(chat_id, msg_id, callback_id, button):
-                print("Gruppe wird angeschrieben.")
+                pass
 
             elif button == "springer":
                 jumper(chat_id, msg_id, callback_id)
@@ -982,11 +999,11 @@ def handle(msg):
 
         elif menue[:4] == "info":
             if showinfo(chat_id, msg_id, callback_id, button):
-                print("Info wird angezeigt")
+                pass
 
             elif menue[:12] == "info/löschen":
                 if deleteinfo(chat_id, msg_id, callback_id, button):
-                    print("Infos werden gelöscht")
+                    pass
                 else:
                     error(chat_id)
 
