@@ -1115,7 +1115,7 @@ def test(msg):
 
 bot = telepot.Bot(TOKEN)
 
-MessageLoop(bot, hanlde).run_as_thread()
+MessageLoop(bot, handle).run_as_thread()
 print("Ich lese mit ...")
 while 1:
     time.sleep(10)
