@@ -1106,7 +1106,14 @@ def handle(msg):
 
 
 def test(msg):
-    runctx("handle(msg)", globals(), locals())
+    if "message_id" in msg:
+        with open("Daten/Speedtest/nachricht{}".format(msg["message_id"]), "w") as f:
+            f.write("")
+        runctx("handle(msg)", globals(), locals(), filename="Daten/Speedtest/nachricht{}".format(msg["message_id"]))
+    else:
+        with open("Daten/Speedtest/button{}".format(msg["id"]), "w") as f:
+            f.write("")
+        runctx("handle(msg)", globals(), locals(), filename="Daten/Speedtest/button{}".format(msg["id"]))
 
 
 #################################
@@ -1115,7 +1122,7 @@ def test(msg):
 
 bot = telepot.Bot(TOKEN)
 
-MessageLoop(bot, handle).run_as_thread()
+MessageLoop(bot, test).run_as_thread()
 print("Ich lese mit ...")
 while 1:
     time.sleep(10)
