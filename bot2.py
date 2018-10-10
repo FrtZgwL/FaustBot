@@ -7,6 +7,7 @@ import telepot
 import time
 import json
 import hashlib
+from cProfile import runctx
 from telepot.loop import MessageLoop
 
 # Temporär?
@@ -32,6 +33,8 @@ MO_ADD_INFO_TEXT = "info hinzufügen"
 MO_SCHULDENZAHLEN = "schulden zahlen"
 MO_SCHULDENMACHEN = "schulden machen"
 MO_SPRINGER ="springer"
+MO_FEEDBACK = "feedback"
+MO_ALL = "all"
 
 SUPPORTTEAM = "@FrtZgwL und @MauriceHaug"
 PASSWORT = ""
@@ -191,8 +194,14 @@ def group(chat_id, msg_id, callback_id):
     for tag in data["chats"]:
         menü += "[{\"text\":\"" + tag + "\", \"callback_data\":\"chat" + hashlib.md5(tag.encode()).hexdigest() + "\"}],"
 
+    menü += "[{\"text\":\"#all\", \"callback_data\":\"all\"}],"
+
     # Springer Zeile
     menü += "[{\"text\":\"#springer\", \"callback_data\":\"springer\"}],"
+
+    # Feedback an Vorstand?
+    # menü += "[{\"text\":\"feedback\", \"callback_data\":\"feedback\"}],"
+
 
     # Steuerfunktionen
     menü += "[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
@@ -319,7 +328,7 @@ def addkey(chat_id, msg_id, callback_id):
         if users[user]["is_schlüsselträger"]:
             anzahl_schlüsselträger += 1
 
-    if anzahl_schlüsselträger >= 4: #TODO Cedric
+    if anzahl_schlüsselträger >= 4:
         warning = "\nSo viele Schlüssel gibt es nicht! Erinnere den letzten Schlüsselträger daran, sich zu entfernen."
 
     users[str(chat_id)]["is_schlüsselträger"] = True
@@ -489,6 +498,29 @@ def deleteinfo(chat_id, msg_id, callback_id, button):
             display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf weitere Infos, um sie zu löschen.", reply_markup=menu)
 
             return True
+
+def feedback(chat_id, msg_id, callback_id):
+    bot.answerCallbackQuery(callback_id,)
+
+    users[str(chat_id)]["modus"] = MO_FEEDBACK
+    save("Daten/users.json", users)
+
+    display_message = bot.editMessageText((chat_id, msg_id), "Bitte sende mir dein Feddback, damit ich es anonym speichern kann.", reply_markup=json.dumps(menüs["nachrichten"]))
+
+def all(chat_id, msg_id, from_id):
+    global users
+
+    if users[str(from_id)]["is_admin"]:
+
+        users[str(chat_id)]["modus"] = MO_ALL
+        save("Daten/users.json", users)
+
+        display_message = bot.editMessageText((chat_id, msg_id), "Bitte sende mir die Nachricht zu, die ich weitergeleitet soll.", reply_markup=json.dumps(menüs["nachrichten"]))
+    else:
+        bot.sendMessage(chat_id, "Nur admins können an alle eine Nachricht schreiben.", reply_markup=json.dumps(menüs["nachrichten"]))
+
+
+
 
 #############################################
 # ---   FUNKTIONEN FÜR CHAT-INTERAKTION --- #
@@ -680,6 +712,33 @@ def chat_normal(chat_id, txt, msg):
         # Fehler, weil irgend ne Nachricht
         error(chat_id)
 
+def chat_send_feedback(chat_id, txt):
+    global display_message
+
+    with open("Daten/feedback.txt", "a") as f:
+        f.write(txt + "\n\n---")
+
+    display_message = bot.sendMessage(chat_id, "Dein Feedback wurde anonym gespeichert. Sende mir gerne mehr Feedback.", reply_markup=json.dumps(menüs["nachrichten"]))
+
+def chat_send_all(chat_id, msg_id, msg):
+    global display_message
+
+    benutzer = []
+    abgelehnte_benutzer = []
+
+    for user in users:
+        name = users[user]["name"]
+        try:
+            bot.forwardMessage(int(user), chat_id, msg["message_id"])
+            display_message = bot.sendMessage(int(user), "Klick auf _Hauptmenü_, um zurück zum Hauptmenü zu kommen", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
+
+            benutzer.append(name)
+        except telepot.exception.TelegramError:
+            abgelehnte_benutzer.append(name)
+
+    display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich an <i>" + ", ".join(benutzer) + " </i> weitergeleitet. Jetzt  kommen alle Namen an die es nicht geklappt hat:" + ", ".join(abgelehnte_benutzer), parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
+
+
 
 def handle(msg):
     global display_message
@@ -746,8 +805,6 @@ def handle(msg):
         #         data["chats"][tag] = [int(id), name] #TODO NOW
         #
         #     save("Daten/data.json", data)
-
-
 
         elif "/help" == txt[:5] or "/?" == txt[:2]:
             if str(chat_id) in users:
@@ -842,6 +899,12 @@ def handle(msg):
             elif modus == MO_ADD_INFO_TEXT:
                 chat_add_info(chat_id, txt)
 
+            elif modus == MO_FEEDBACK:
+                chat_send_feedback(chat_id, txt)
+
+            elif modus == MO_ALL:
+                chat_send_all(chat_id, msg["message_id"], msg)
+
 
         elif msg["chat"]["type"] == "group":
 
@@ -913,6 +976,9 @@ def handle(msg):
 
             elif button == "tür":
                 door(chat_id, msg_id, callback_id)
+
+            elif button == "feedback":
+                feedback(chat_id, msg_id, callback_id)
 
             else:
                 error(chat_id)
@@ -994,6 +1060,9 @@ def handle(msg):
             elif button == "springer":
                 jumper(chat_id, msg_id, callback_id)
 
+            elif button == "all":
+                all(chat_id, msg_id, msg["from"]["id"])
+
             else:
                 error(chat_id)
 
@@ -1036,6 +1105,9 @@ def handle(msg):
     #pp.pprint(users)
 
 
+def test(msg):
+    runctx("handle(msg)", globals(), locals())
+
 
 #################################
 # ---   TELEPOT STARTEN     --- #
@@ -1043,7 +1115,7 @@ def handle(msg):
 
 bot = telepot.Bot(TOKEN)
 
-MessageLoop(bot, handle).run_as_thread()
+MessageLoop(bot, hanlde).run_as_thread()
 print("Ich lese mit ...")
 while 1:
     time.sleep(10)
