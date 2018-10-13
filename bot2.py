@@ -33,7 +33,6 @@ MO_ADD_INFO_TEXT = "info hinzufügen"
 MO_SCHULDENZAHLEN = "schulden zahlen"
 MO_SCHULDENMACHEN = "schulden machen"
 MO_SPRINGER ="springer"
-MO_FEEDBACK = "feedback"
 MO_ALL = "all"
 
 SUPPORTTEAM = "@FrtZgwL und @MauriceHaug"
@@ -198,9 +197,6 @@ def group(chat_id, msg_id, callback_id):
 
     # Springer Zeile
     menü += "[{\"text\":\"#springer\", \"callback_data\":\"springer\"}],"
-
-    # Feedback an Vorstand?
-    # menü += "[{\"text\":\"feedback\", \"callback_data\":\"feedback\"}],"
 
 
     # Steuerfunktionen
@@ -499,14 +495,6 @@ def deleteinfo(chat_id, msg_id, callback_id, button):
 
             return True
 
-def feedback(chat_id, msg_id, callback_id):
-    bot.answerCallbackQuery(callback_id,)
-
-    users[str(chat_id)]["modus"] = MO_FEEDBACK
-    save("Daten/users.json", users)
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Bitte sende mir dein Feddback, damit ich es anonym speichern kann.", reply_markup=json.dumps(menüs["nachrichten"]))
-
 def all(chat_id, msg_id, from_id):
     global users
 
@@ -720,14 +708,6 @@ def chat_normal(chat_id, txt, msg):
         # Fehler, weil irgend ne Nachricht
         error(chat_id)
 
-def chat_send_feedback(chat_id, txt):
-    global display_message
-
-    with open("Daten/feedback.txt", "a") as f:
-        f.write(txt + "\n\n---")
-
-    display_message = bot.sendMessage(chat_id, "Dein Feedback wurde anonym gespeichert. Sende mir gerne mehr Feedback.", reply_markup=json.dumps(menüs["nachrichten"]))
-
 def chat_send_all(chat_id, msg_id, msg):
     global display_message
 
@@ -907,9 +887,6 @@ def handle(msg):
             elif modus == MO_ADD_INFO_TEXT:
                 chat_add_info(chat_id, txt)
 
-            elif modus == MO_FEEDBACK:
-                chat_send_feedback(chat_id, txt)
-
             elif modus == MO_ALL:
                 chat_send_all(chat_id, msg["message_id"], msg)
 
@@ -984,9 +961,6 @@ def handle(msg):
 
             elif button == "tür":
                 door(chat_id, msg_id, callback_id)
-
-            elif button == "feedback":
-                feedback(chat_id, msg_id, callback_id)
 
             else:
                 error(chat_id)
@@ -1113,24 +1087,13 @@ def handle(msg):
     #pp.pprint(users)
 
 
-def test(msg):
-    if "message_id" in msg:
-        with open("Daten/Speedtest/nachricht{}".format(msg["message_id"]), "w") as f:
-            f.write("")
-        runctx("handle(msg)", globals(), locals(), filename="Daten/Speedtest/nachricht{}".format(msg["message_id"]))
-    else:
-        with open("Daten/Speedtest/button{}".format(msg["id"]), "w") as f:
-            f.write("")
-        runctx("handle(msg)", globals(), locals(), filename="Daten/Speedtest/button{}".format(msg["id"]))
-
-
 #################################
 # ---   TELEPOT STARTEN     --- #
 #################################
 
 bot = telepot.Bot(TOKEN)
 
-MessageLoop(bot, test).run_as_thread()
+MessageLoop(bot, handle).run_as_thread()
 print("Ich lese mit ...")
 while 1:
     time.sleep(10)
