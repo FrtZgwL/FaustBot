@@ -1,0 +1,238 @@
+{
+  "haupt": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Info",
+          "callback_data": "info"
+        },
+        {
+          "text": "Schlüssel",
+          "callback_data": "schlüssel"
+        },
+        {
+          "text": "Gruppen",
+          "callback_data": "gruppen"
+        }
+      ],
+      [
+        {
+          "text": "Tür",
+          "callback_data": "tür"
+        },
+        {
+          "text": "Einkaufsliste",
+          "callback_data": "einkaufsliste"
+        },
+        {
+          "text": "Schulden",
+          "callback_data": "schulden"
+        }
+      ],
+      [
+        {
+          "text": "Hilfe",
+          "callback_data": "hilfe"
+        }
+      ]
+    ]
+  },
+  "habschlüssel": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "nichtmehr Schlüsseträger",
+          "callback_data": "schlüsselentfernen"
+        },
+        {
+          "text": "Nachricht",
+          "callback_data": "schlüsselnachricht"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "habkeinenschlüssel": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "werde Schlüsselträger",
+          "callback_data": "schlüsselhinzufügen"
+        },
+        {
+          "text": "Nachricht",
+          "callback_data": "schlüsselnachricht"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "türzu": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Türe schließen",
+          "callback_data": "türzu"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "türoffen": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Türe öffnen",
+          "callback_data": "türoffen"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "schulden": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "0,50€",
+          "callback_data": "0,50€"
+        },
+        {
+          "text": "0,70€",
+          "callback_data": "0,70€"
+        }
+      ],
+      [
+        {
+          "text": "1,00€",
+          "callback_data": "1,00€"
+        },
+        {
+          "text": "1,25€",
+          "callback_data": "1,25€"
+        }
+      ],
+      [
+        {
+          "text": "1,50€",
+          "callback_data": "1,50€"
+        },
+        {
+          "text": "1,75€",
+          "callback_data": "1,75€"
+        }
+      ],
+      [
+        {
+          "text": "Schulden begleichen",
+          "callback_data": "schuldenbegleichen"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "schuldenbegleichen": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Alles zahlen",
+          "callback_data": "alleszahlen"
+        }
+      ],
+      [
+        {
+          "text": "Zurück",
+          "callback_data": "schulden"
+        },
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "einkaufliste": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Artikel hinzufügen",
+          "callback_data": "hinzufügen"
+        },
+        {
+          "text": "Artikel entfernen",
+          "callback_data": "entfernen"
+        }
+      ],
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "einstellungen": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "meinen Account löschen",
+          "callback_data": "-account"
+        }
+      ],
+      [
+        {
+          "text": "Zurück",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "nachrichten": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  },
+  "error": {
+    "inline_keyboard": [
+      [
+        {
+          "text": "Hilfe",
+          "callback_data": "hilfe"
+        },
+        {
+          "text": "Hauptmenü",
+          "callback_data": "haupt"
+        }
+      ]
+    ]
+  }
+}

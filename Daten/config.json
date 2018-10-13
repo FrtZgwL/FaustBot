@@ -1,0 +1,6 @@
+{
+  "passwort": "Speichere hier den md5 hash für dein Nutzerpasswort",
+  "adminpasswort": "Speichere hier den md5 hash für dein Adminpasswort",
+  "token":"Speichere hier das Token für deinen Bot",
+  "supportteam":"Speichere hier die Namen der Mitarbeiter deines Supportteams (Beispiel @MeinName)"
+}
