@@ -544,12 +544,20 @@ def chat_gruppen(chat_id, txt, msg_id):
 def chat_springer(chat_id, txt, msg_id):
     global display_message
 
+    there_are_jumpers = False
+
     for id in users:
         if users[id]["is_springer"]:
+            there_are_jumpers = True
+
             bot.forwardMessage(int(id), chat_id, msg_id)
             bot.sendMessage(int(id), "Hauptmenü", reply_markup=json.dumps(menüs["nachrichten"]))
 
-    display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
+    if there_are_jumpers:
+        display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
+
+    else:
+        display_message = bot.sendMessage(chat_id, "Es gibt im Moment kein Springer", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def chat_add_group(chat_id, txt, msg):
     global data
@@ -610,7 +618,7 @@ def chat_schluessel(chat_id, msg_id):
         if users[user]["is_schlüsselträger"]:
             bot.forwardMessage(int(user), chat_id, msg_id)
             display_message = bot.sendMessage(int(user), "Klick auf _Hauptmenü_, um zurück zum Hauptmenü zu kommen", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-            bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=json.dumps(menüs["nachrichten"]))
+        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def chat_einkaeufe(chat_id, txt):
     global data
