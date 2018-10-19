@@ -124,7 +124,7 @@ def save(pfad, obj):
     with open(pfad, "w") as f:
         f.write(json.dumps(obj, indent=2, sort_keys=True))
 
-def pickle_safe(pfad, obj):
+def pickle_save(pfad, obj):
     with open(pfad, "wb") as f:
         pickle.dump(obj, f)
 
@@ -184,7 +184,7 @@ def adddebts(betrag, chat_id, callback_id, msg_id):
     betraghinzu = str(betrag).replace(".", ",") + "€ wurden zu deinen Schulden hinzugefügt."
 
     bank.buy(chat_id, betrag)
-    pickle_safe("Daten/schulden.bin", bank)
+    pickle_save("Daten/schulden.bin", bank)
 
     bot.answerCallbackQuery(callback_id, text=betraghinzu)
     display_message = bot.editMessageText((chat_id, msg_id), "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€. Tipp auf Buttons, um mehr Schulden zu machen, oder schick mir den Betrag als Kommazahl.", reply_markup=json.dumps(menüs["schulden"]))
@@ -428,7 +428,7 @@ def cleardebt(chat_id, msg_id, callback_id):
     save("Daten/users.json", users)
 
     bank.clear(chat_id)
-    pickle_safe("Daten/schulden.bin", bank)
+    pickle_save("Daten/schulden.bin", bank)
 
     display_message = bot.editMessageText((chat_id, msg_id), "Du schuldest dem Faust. " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=json.dumps(menüs["schuldenbegleichen"]))
 
@@ -858,6 +858,15 @@ def handle(msg):
 
                     bot.sendMessage(chat_id, "_" + txt.lower()[5:] + "_ wurde als neue Gruppe hinzugefügt.", parse_mode="Markdown")
 
+        elif "/debts" == txt[:6]:
+            if (users[str(chat_id)]["is_admin"] | users[str(chat_id)]["is_finanzen"]):
+                for id in users:
+                    try:
+                        bot.sendMessage(chat_id, users[id]["name"] + "\n" + bank.get_debts(int(id)))
+                    except IndexError:
+                        bot.sendMessage(chat_id, users[id]["name"] + "\n" "Keine Einträge+\n\n")
+            else:
+                bot.sendMessage(chat_id, "Sorry, aber du hast nicht das Recht, diese Funktion zu benutzen...\nDrück auf /start um den Bot zu starten.")
 
 #######################################################
 #           ---   CHAT INTERAKTION    --- #
