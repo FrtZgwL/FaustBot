@@ -6,9 +6,13 @@
 import telepot
 import time
 import json
+import pickle
 import hashlib
 from cProfile import runctx
 from telepot.loop import MessageLoop
+
+# Eigene
+import debts
 
 # Temporär?
 import pprint
@@ -71,6 +75,7 @@ display_message = {}
 users = {}
 data = {}
 infotext = ""
+bank = debts.Bank()
 
 
 
@@ -100,6 +105,8 @@ with open("Daten/config.json", "r") as f:
     ADMIN_PASSWORT = config["adminpasswort"]
     TOKEN = config["token"]
 
+with open("Daten/schulden.bin", "rb") as f:
+    bank = pickle.load(f)
 
 #########################
 # ---   Funktionen  --- #
@@ -116,6 +123,10 @@ def error(chat_id):
 def save(pfad, obj):
     with open(pfad, "w") as f:
         f.write(json.dumps(obj, indent=2, sort_keys=True))
+
+def pickle_safe(pfad, obj):
+    with open(pfad, "wb") as f:
+        pickle.dump(obj, f)
 
 def build_name(msg):
     if msg["chat"]["type"] == "private":
@@ -169,7 +180,12 @@ def adddebts(betrag, chat_id, callback_id, msg_id):
     users[str(chat_id)]["schulden"] = round(users[str(chat_id)]["schulden"] + betrag, 2)
     users[str(chat_id)]["schulden"]
     save("Daten/users.json", users)
+
     betraghinzu = str(betrag).replace(".", ",") + "€ wurden zu deinen Schulden hinzugefügt."
+
+    bank.buy(chat_id, betrag)
+    pickle_safe("Daten/schulden.bin", bank)
+
     bot.answerCallbackQuery(callback_id, text=betraghinzu)
     display_message = bot.editMessageText((chat_id, msg_id), "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€. Tipp auf Buttons, um mehr Schulden zu machen, oder schick mir den Betrag als Kommazahl.", reply_markup=json.dumps(menüs["schulden"]))
 
@@ -410,6 +426,9 @@ def cleardebt(chat_id, msg_id, callback_id):
     users[str(chat_id)]["modus"] = MO_SCHULDENZAHLEN
     users[str(chat_id)]["menue"] = ME_SCHULDENBEGLEICHEN
     save("Daten/users.json", users)
+
+    bank.clear(chat_id)
+    pickle_safe("Daten/schulden.bin", bank)
 
     display_message = bot.editMessageText((chat_id, msg_id), "Du schuldest dem Faust. " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=json.dumps(menüs["schuldenbegleichen"]))
 
