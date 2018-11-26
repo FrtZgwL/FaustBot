@@ -525,11 +525,6 @@ def chat_passwort(chat_id, txt):
         display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
 
 
-#def chat_extern(list_chat_id, txt, msg_id):
-
-    #try:
-        #bot.forwardMessage(list_chat_id, from_chat_id, message_id, disable_notification=None)
-
 
 def chat_gruppen(chat_id, txt, msg_id):
     global display_message
