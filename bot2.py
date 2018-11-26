@@ -10,6 +10,7 @@ import pickle
 import hashlib
 from cProfile import runctx
 from telepot.loop import MessageLoop
+from constants import Constants as const
 
 # Eigene
 import debts
@@ -31,7 +32,6 @@ MO_PASSWORT = "passwort"
 MO_SCHLÜSSEL = "schlüssel"
 MO_EINKÄUFE = "einkauf"
 MO_GRUPPEN = "gruppen"
-MO_ADD_GROUP = "gruppe hinzufügen"
 MO_ADD_INFO_LINK = "link hinzufügen"
 MO_ADD_INFO_TEXT = "info hinzufügen"
 MO_SCHULDENZAHLEN = "schulden zahlen"
@@ -134,21 +134,7 @@ def build_name(msg):
     else:
         return msg["chat"]["title"]
 
-def buildDelShoplistMenu(liste):
-    menü = "{\"inline_keyboard\":["
-
-    for item in liste:
-        menü = menü + "[{\"text\":\"" + item + "\",\"callback_data\":\"" + hashlib.md5(item.encode()).hexdigest() + "\"}],"
-
-    menü = menü + "[{\"text\":\"!!! Alles löschen !!!\", \"callback_data\":\"alleslöschen\"}],[{\"text\":\"Zurück\", \"callback_data\":\"zurück\"}, {\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
-
-    # return menü
-    return build_menu(liste, [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]])
-
-    users[str(chat_id)]["menue"] = ME_EINKAUFSLISTE
-    save("Daten/users.json", users)
-
-def build_menu(items, footer, identifier = ""):
+def build_menu(items, footer, identifier = ""): # TODO
     menu = "{\"inline_keyboard\":["
 
     for item in items:
@@ -219,24 +205,17 @@ def group(chat_id, msg_id, callback_id):
     # Steuerfunktionen
     menü += "[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
 
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Gruppe um ihnen eine Nachricht zu senden", reply_markup=menü)
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Gruppe um ihnen eine Nachricht zu senden", reply_markup=build_menu(data["chats"], const.footer_group_main, "chat"))
 
 def info(chat_id, msg_id, callback_id):
+    """Shows info-menu."""
+
     bot.answerCallbackQuery(callback_id)
 
     users[str(chat_id)]["menue"] = ME_INFO
     save("Daten/users.json", users)
 
-    menu = "{\"inline_keyboard\":["
-
-    # Alle Info-Zeilen ausgeben
-    for info in data["infos"]:
-        menu = menu + "[{\"text\":\"" + info + "\", \"callback_data\":\"info" + hashlib.md5(info.encode()).hexdigest() + "\"}],"
-
-    # Steuerfunktionen
-    menu = menu + "[{\"text\":\"Infos hinzufügen\", \"callback_data\":\"infotexthinzufügen\"},{\"text\":\"Infos entfernen\",\"callback_data\":\"infolöschen\"}],[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=menu)
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_menu(data["infos"], const.footer_info_main, "info"))
 
 def door(chat_id, msg_id, callback_id):
     bot.answerCallbackQuery(callback_id)
@@ -352,21 +331,6 @@ def addkey(chat_id, msg_id, callback_id):
 
     mainmenu(chat_id, msg_id, callback_id)
 
-def dellinfo(chat_id, msg_id, callback_id):
-    bot.answerCallbackQuery(callback_id)
-
-    menu = "{\"inline_keyboard\":["
-
-    for info in data["infos"]:
-        menu += "[{\"text\":\"" + info + "\", \"callback_data\": \"deleteinfo" + hashlib.md5(info.encode()).hexdigest() + "\"}],"
-
-    menu += "[{\"text\":\"Zurück\", \"callback_data\":\"zurück\"},{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Zeile, um sie zu löschen.", reply_markup=menu)
-
-    users[str(chat_id)]["menue"] = ME_INFOLÖSCHEN
-    save("Daten/users.json", users)
-
 
 def addinfo(chat_id, msg_id, callback_id, msg):
     global users
@@ -472,7 +436,8 @@ def dellitem(chat_id, msg_id, callback_id, button):
             data["einkaufsliste"].remove(item)
             save("Daten/data.json", data)
             bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
-            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]]))
+
+            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], const.footer_shoplist_delete))
 
             return True
 
@@ -496,22 +461,33 @@ def showinfo(chat_id, msg_id, callback_id, button):
 
             return True
 
+def dellinfo(chat_id, msg_id, callback_id):
+    """Shows Menu that allows user to delete infos."""
+
+    bot.answerCallbackQuery(callback_id)
+
+    users[str(chat_id)]["menue"] = ME_INFOLÖSCHEN
+    save("Daten/users.json", users)
+
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Zeile, um sie zu löschen.", reply_markup=build_menu(data["infos"], const.footer_back_main, "deleteinfo"))
+
 def deleteinfo(chat_id, msg_id, callback_id, button):
+    """Deletes one info named button and shows info menu. Returns true if info was deleted."""
+
     global data
 
+    # Search if button is an info to delete
     for item in data["infos"].copy():
         if button == "deleteinfo" + hashlib.md5(item.encode()).hexdigest():
+            # Delete Info
             del data["infos"][item]
             save("Daten/data.json", data)
+
+            # Show notification
             bot.answerCallbackQuery(callback_id, text = item + " wurde gelöscht. Tippe weitere Infos an, um sie zu löschen.")
-            menu = "{\"inline_keyboard\":["
 
-            for info in data["infos"]:
-                menu += "[{\"text\":\"" + info + "\", \"callback_data\": \"deleteinfo" + hashlib.md5(info.encode()).hexdigest() + "\"}],"
-
-            menu += "[{\"text\":\"Zurück\", \"callback_data\":\"zurück\"},{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
-
-            display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf weitere Infos, um sie zu löschen.", reply_markup=menu)
+            # Show new menu
+            display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf weitere Infos, um sie zu löschen.", reply_markup=build_menu(data["infos"], const.footer_back_main, "deleteinfo"))
 
             return True
 
@@ -548,6 +524,13 @@ def chat_passwort(chat_id, txt):
     else:
         display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
 
+
+#def chat_extern(list_chat_id, txt, msg_id):
+
+    #try:
+        #bot.forwardMessage(list_chat_id, from_chat_id, message_id, disable_notification=None)
+
+
 def chat_gruppen(chat_id, txt, msg_id):
     global display_message
     global data
@@ -578,20 +561,6 @@ def chat_springer(chat_id, txt, msg_id):
 
     else:
         display_message = bot.sendMessage(chat_id, "Es gibt im Moment kein Springer", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_add_group(chat_id, txt, msg):
-    global data
-    global display_message
-
-    if txt[0] != "#":
-        display_message = bot.sendMessage(chat_id, "Jeder Tag muss mit einem \"#\" beginnen. Zum Beispiel so: _#meinegruppe_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-    elif " " in txt:
-        display_message = bot.sendMessage(chat_id, "Tags dürfen nur aus einem Wort bestehen. Zum Beispiel so: _#meinegruppe_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-    else:
-        data["chats"][txt.lower()] = [chat_id, build_name(msg)]
-        save("Daten/data.json", data)
-
-        display_message = bot.sendMessage(chat_id, "_" + txt.lower() + "_ wurde als neue Gruppe hinzugefügt.", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def chat_schuldenzahlen(chat_id, txt):
     global users
@@ -883,6 +852,12 @@ def handle(msg):
             else:
                 modus = users[str(chat_id)]["modus"]
 
+            # --- TASTATURBUTTON INTERAKTION --- #
+
+            if txt == "hauptmenü":
+
+
+
 
             # --- ANTWORTEN IN PRIVATCHATS ---- #
 
@@ -897,9 +872,6 @@ def handle(msg):
 
             elif modus == MO_SPRINGER:
                 chat_springer(chat_id, txt, msg["message_id"])
-
-            elif modus == MO_ADD_GROUP:
-                chat_add_group(chat_id, txt, msg)
 
             elif modus == MO_SCHULDENZAHLEN: # TODO zu viel weg + negativ
                 chat_schuldenzahlen(chat_id, txt)
@@ -920,23 +892,6 @@ def handle(msg):
                 chat_send_all(chat_id, msg["message_id"], msg)
 
 
-        elif msg["chat"]["type"] == "group":
-
-            # --- ANTWORTEN IN GRUPPENCHATS --- #
-
-            id = msg["from"]["id"]
-            modus = users[str(id)]["modus"]
-
-            if modus == MO_ADD_GROUP:
-                if txt[0] != "#":
-                    display_message = bot.sendMessage(id, "Jeder Tag muss mit einem \"#\" beginnen. Zum Beispiel so: _#meinegruppe_", parse_mode="Markdown", reply_markup=json.dumps(menüs["stop"]))
-                elif " " in txt:
-                    display_message = bot.sendMessage(id, "Tags dürfen nur aus einem Wort bestehen. Zum Beispiel so: _#meinegruppe_", parse_mode="Markdown", reply_markup=json.dumps(menüs["stop"]))
-                else:
-                    data["chats"][txt.lower()] = [id, build_name(msg)]
-                    save("Daten/data.json", data)
-
-                    display_message = bot.sendMessage(id, "_" + txt.lower() + "_ wurde als neue Gruppe hinzugefügt.", parse_mode="Markdown", reply_markup=json.dumps(menüs["stop"]))
 
 
 
