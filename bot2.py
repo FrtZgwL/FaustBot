@@ -142,7 +142,8 @@ def buildDelShoplistMenu(liste):
 
     menü = menü + "[{\"text\":\"!!! Alles löschen !!!\", \"callback_data\":\"alleslöschen\"}],[{\"text\":\"Zurück\", \"callback_data\":\"zurück\"}, {\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
 
-    return menü
+    # return menü
+    return build_menu(liste, [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]])
 
     users[str(chat_id)]["menue"] = ME_EINKAUFSLISTE
     save("Daten/users.json", users)
@@ -455,7 +456,7 @@ def clearshoplist(chat_id, msg_id, callback_id):
 
     users[str(chat_id)]["menue"] = ME_ARTIKELENTFERNEN
 
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=buildDelShoplistMenu(data["einkaufsliste"]))
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]]))
 
 def dellshoplist(chat_id, msg_id, callback_id):
     data["einkaufsliste"] = []
@@ -471,7 +472,7 @@ def dellitem(chat_id, msg_id, callback_id, button):
             data["einkaufsliste"].remove(item)
             save("Daten/data.json", data)
             bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
-            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=buildDelShoplistMenu(data["einkaufsliste"]))
+            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]]))
 
             return True
 
