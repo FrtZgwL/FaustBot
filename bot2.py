@@ -849,8 +849,7 @@ def handle(msg):
 
             # --- TASTATURBUTTON INTERAKTION --- #
 
-            if txt == "hauptmenü":
-
+            # TODO
 
 
 
