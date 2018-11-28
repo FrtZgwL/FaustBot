@@ -134,28 +134,44 @@ def build_name(msg):
     else:
         return msg["chat"]["title"]
 
-def build_menu(items, footer, identifier = ""): # TODO
+def build_button_menu(items, footer=None, identifier=""): # TODO
     menu = "{\"inline_keyboard\":["
 
     for item in items:
-        menu = menu + "[{\"text\":\"" + item + "\",\"callback_data\":\"" + identifier + hashlib.md5(item.encode()).hexdigest() + "\"}],"
+        menu = menu + "[{\"text\":\"" + item + "\",\"callback_data\":\"" + identifier + item + "\"}],"
 
-    for row in footer:
-        menu += "["
-        for button in row:
-            if len(button[0]) == 1:
-                menu += "{\"text\":\"" + button + "\","
-                menu += "\"callback_data\":\"" + button + "\"},"
-                break
+    if footer:
+        for row in footer:
+            menu += "["
+            for button in row:
+                if len(button[0]) == 1:
+                    menu += "{\"text\":\"" + button + "\","
+                    menu += "\"callback_data\":\"" + button + "\"},"
+                    break
 
-            menu += "{\"text\":\"" + button[0] + "\","
-            menu += "\"callback_data\":\"" + button[1] + "\"},"
+                menu += "{\"text\":\"" + button[0] + "\","
+                menu += "\"callback_data\":\"" + button[1] + "\"},"
+            menu = menu[:-1]
+            menu += "],"
         menu = menu[:-1]
-        menu += "],"
-    menu = menu[:-1]
-    menu += "]}"
+        menu += "]}"
+    else:
+        menu = menu[:-1]
+        menu += "]}"
 
     return menu
+
+def build_keyboard_menu(menu, resize_keyboard=True):
+    """Takes a 2D Array with menu buttons
+    Returns a json serialized string of a ReplyKeyboardMarkup object"""
+
+    if resize_keyboard:
+        string = "{\"keyboard\":" + json.dumps(menu) + ","
+        string += "\"resize_keyboard\":true}"
+    else:
+        string = "{\"keyboard\":" + json.dumps(menu) + "}"
+    return string
+
 
 #################################################
 # ---   FUNKTIONEN FÜR BUTTON INTERAKTION   --- #
@@ -176,37 +192,6 @@ def adddebts(betrag, chat_id, callback_id, msg_id):
     bot.answerCallbackQuery(callback_id, text=betraghinzu)
     display_message = bot.editMessageText((chat_id, msg_id), "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€. Tipp auf Buttons, um mehr Schulden zu machen, oder schick mir den Betrag als Kommazahl.", reply_markup=json.dumps(menüs["schulden"]))
 
-def mainmenu(chat_id, msg_id, callback_id):
-    bot.answerCallbackQuery(callback_id)
-
-    users[str(chat_id)]["modus"] = MO_NORMAL
-    users[str(chat_id)]["menue"] = ME_HAUPT
-    save("Daten/users.json", users)
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Hauptmenü", reply_markup=json.dumps(menüs["haupt"]))
-
-def group(chat_id, msg_id, callback_id):
-    bot.answerCallbackQuery(callback_id)
-
-    users[str(chat_id)]["menue"] = ME_GRUPPEN
-    save("Daten/users.json", users)
-    menü = "{\"inline_keyboard\":["
-
-    # Alle Gruppen ausgeben
-    for tag in data["chats"]:
-        menü += "[{\"text\":\"" + tag + "\", \"callback_data\":\"chat" + hashlib.md5(tag.encode()).hexdigest() + "\"}],"
-
-    menü += "[{\"text\":\"#all\", \"callback_data\":\"all\"}],"
-
-    # Springer Zeile
-    menü += "[{\"text\":\"#springer\", \"callback_data\":\"springer\"}],"
-
-
-    # Steuerfunktionen
-    menü += "[{\"text\":\"Hauptmenü\", \"callback_data\":\"haupt\"}]]}"
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Gruppe um ihnen eine Nachricht zu senden", reply_markup=build_menu(data["chats"], const.footer_group_main, "chat"))
-
 def info(chat_id, msg_id, callback_id):
     """Shows info-menu."""
 
@@ -215,34 +200,24 @@ def info(chat_id, msg_id, callback_id):
     users[str(chat_id)]["menue"] = ME_INFO
     save("Daten/users.json", users)
 
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_menu(data["infos"], const.footer_info_main, "info"))
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_button_menu(data["infos"], identifier="info"))
 
+# TODO die
 def door(chat_id, msg_id, callback_id):
     bot.answerCallbackQuery(callback_id)
+
+
     if data["tür"]:
         open_text = "Die Tür ist offen. Hier kannst du sie schließen." # Das später zufällig
 
-        display_message = bot.editMessageText((chat_id, msg_id), open_text, reply_markup=json.dumps(menüs["türzu"]))
+        bot.sendMessage(chat_id, open_text, reply_markup=json.dumps(menüs["türzu"]))
     else:
         closed_text = "Die Tür ist zu. Hier kannst du sie öffnen."
 
-        display_message = bot.editMessageText((chat_id, msg_id), closed_text, reply_markup=json.dumps(menüs["türoffen"]))
+        bot.sendMessage(chat_id, closed_text, reply_markup=json.dumps(menüs["türoffen"]))
 
     users[str(chat_id)]["menue"] = ME_TÜR
     save("Daten/users.json", users)
-
-def help_button(chat_id, msg_id, callback_id):
-    bot.answerCallbackQuery(callback_id)
-
-    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
-
-    for tag in data["chats"]:
-        help_str += tag + ", "
-    help_str = help_str[:-2]
-
-    help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
-
-    display_message = bot.editMessageText((chat_id, msg_id), help_str, reply_markup=json.dumps(menüs["nachrichten"]))
 
 def help_chat(chat_id):
     help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
@@ -420,7 +395,7 @@ def clearshoplist(chat_id, msg_id, callback_id):
 
     users[str(chat_id)]["menue"] = ME_ARTIKELENTFERNEN
 
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]]))
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_button_menu(data["einkaufsliste"], [[["!!! Alles löschen !!!", "alleslöschen"]], [["Zurück", "zurück"], ["Hauptmenü", "haupt"]]]))
 
 def dellshoplist(chat_id, msg_id, callback_id):
     data["einkaufsliste"] = []
@@ -437,7 +412,7 @@ def dellitem(chat_id, msg_id, callback_id, button):
             save("Daten/data.json", data)
             bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
 
-            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_menu(data["einkaufsliste"], const.footer_shoplist_delete))
+            display_message = bot.editMessageText((chat_id, msg_id), "Tippe Artikel an, um sie zu entfernen.", reply_markup=build_button_menu(data["einkaufsliste"], const.footer_shoplist_delete))
 
             return True
 
@@ -469,7 +444,7 @@ def dellinfo(chat_id, msg_id, callback_id):
     users[str(chat_id)]["menue"] = ME_INFOLÖSCHEN
     save("Daten/users.json", users)
 
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Zeile, um sie zu löschen.", reply_markup=build_menu(data["infos"], const.footer_back_main, "deleteinfo"))
+    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf die Zeile, um sie zu löschen.", reply_markup=build_button_menu(data["infos"], const.footer_back_main, "deleteinfo"))
 
 def deleteinfo(chat_id, msg_id, callback_id, button):
     """Deletes one info named button and shows info menu. Returns true if info was deleted."""
@@ -487,7 +462,7 @@ def deleteinfo(chat_id, msg_id, callback_id, button):
             bot.answerCallbackQuery(callback_id, text = item + " wurde gelöscht. Tippe weitere Infos an, um sie zu löschen.")
 
             # Show new menu
-            display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf weitere Infos, um sie zu löschen.", reply_markup=build_menu(data["infos"], const.footer_back_main, "deleteinfo"))
+            display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf weitere Infos, um sie zu löschen.", reply_markup=build_button_menu(data["infos"], const.footer_back_main, "deleteinfo"))
 
             return True
 
@@ -838,18 +813,224 @@ def handle(msg):
 #######################################################
 
         elif msg["chat"]["type"] == "private":
-
-            modus = 0
-
             # Wenn noch kein Nutzer, Fehlermeldung und rausschmeißen
             if str(msg["from"]["id"]) not in users:
                 bot.sendMessage(msg["chat"]["id"], "Du bist noch nicht als Nutzer eingetragen. Starte den chat mit dem Bot durch \"/start\" und gib das Passwort ein.")
             else:
                 modus = users[str(chat_id)]["modus"]
 
-            # --- TASTATURBUTTON INTERAKTION --- #
+            # Variablen erstellen
+            modus = 0
+            menue = users[str(chat_id)]["menue"]
 
-            if txt == "hauptmenü":
+            # --- TASTATURBUTTON INTERAKTION --- #
+            print(menue)
+
+            button = txt
+            if button == "Hauptmenü":
+                users[str(chat_id)]["menue"] = "Hauptmenü"
+                save("Daten/users.json", users)
+
+                display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
+
+            elif button == "Hilfe":
+                help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
+
+                for tag in data["chats"]:
+                    help_str += tag + ", "
+                help_str = help_str[:-2]
+
+                help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
+
+                bot.sendMessage(chat_id, help_str, reply_markup=build_keyboard_menu(const.menu_basic, resize_keyboard=True))
+
+            elif button == "zurück":
+
+                if menue == "info/löschen":
+                    info(chat_id, msg_id, callback_id)
+
+                elif menue == "einkaufsliste/entfernen":
+                    shoplist(chat_id, msg_id, callback_id)
+
+                elif menue == "schulden/begleichen":
+                    debt(chat_id, msg_id, callback_id)
+
+                elif menue == "info/löschen":
+                    info(chat_id, msg_id, callback_id)
+
+            elif menue == "Hauptmenü":
+
+                if button == "Gruppen":
+                    users[str(chat_id)]["menue"] = "Gruppen"
+                    save("Daten/users.json", users)
+
+                    display_message = bot.sendMessage(chat_id, "Gruppen", reply_markup=build_keyboard_menu(const.menu_basic))
+                    display_message = bot.sendMessage(chat_id, "Tippe auf die Gruppe um ihnen eine Nachricht zu senden", reply_markup=build_button_menu(data["chats"], const.footer_group_main, "chat"))
+
+                elif button == "Info":
+                    users[str(chat_id)]["menue"] = ME_INFO
+                    save("Daten/users.json", users)
+
+                    bot.sendMessage(chat_id, "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_keyboard_menu(const.menu_info_main))
+                    bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"], identifier="info"))
+
+                elif button == "Schlüssel":
+                    schlüssel_text = "Die aktuellen Schlüsselträger sind: Das Faust"
+
+                    for user in users:
+                        if users[user]["is_schlüsselträger"]:
+                            schlüssel_text = schlüssel_text + ", " + users[user]["name"]
+
+                    users[str(chat_id)]["menue"] = "Schlüssel"
+                    save("Daten/users.json", users)
+
+                    if users[str(chat_id)]["is_schlüsselträger"]:
+                        bot.sendMessage(chat_id, schlüssel_text, reply_markup=build_keyboard_menu(const.menu_has_key))
+                    else:
+                        bot.sendMessage(chat_id, schlüssel_text, reply_markup=build_keyboard_menu(const.menu_has_no_key))
+
+                elif button == "schulden":
+                    debt(chat_id, msg_id, callback_id)
+
+                elif button == "einkaufsliste":
+                    shoplist(chat_id, msg_id, callback_id)
+
+                elif button == "tür":
+                    door(chat_id, msg_id, callback_id)
+
+                else:
+                    error(chat_id)
+
+            elif menue == "Gruppen/Senden":
+                try:
+                    bot.forwardMessage(users[str(chat_id)]["forward_to"], chat_id, msg["message_id"])
+
+                    bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=build_keyboard_menu(const.menu_main))
+                except telepot.exception.BotWasKickedError:
+                    display_message = bot.sendMessage(chat_id, "Sorry, aber die Gruppe gibt es nicht mehr. Bitte melde dich bei " + SUPPORTTEAM + ".", reply_markup=build_keyboard_menu(const.menu_basic))
+                finally:
+                    users[str(chat_id)]["menue"] = "Hauptmenü"
+
+            elif menue == "Schlüssel":
+
+                if button =="Hinzufügen":
+                    warning = None
+
+                    anzahl_schlüsselträger = 0
+                    for user in users:
+                        if users[user]["is_schlüsselträger"]:
+                            anzahl_schlüsselträger += 1
+
+                    if anzahl_schlüsselträger >= 4:
+                        warning = "\nSo viele Schlüssel gibt es nicht! Erinnere den letzten Schlüsselträger daran, sich zu entfernen."
+
+                    users[str(chat_id)]["is_schlüsselträger"] = True
+                    save("Daten/users.json", users)
+
+                    if warning:
+                        bot.sendMessage(chat_id, warning)
+                    bot.sendMessage(chat_id, "Du wurdest als Schlüsselträger hinzugefügt", reply_markup=build_keyboard_menu(const.menu_has_key))
+
+                elif button == "Entfernen":
+                    users[str(chat_id)]["is_schlüsselträger"] = False
+                    save("Daten/users.json", users)
+
+                    bot.sendMessage(chat_id, "Du wurdest als Schlüsselträger entfernt", reply_markup=build_keyboard_menu(const.menu_has_no_key))
+
+                elif button == "Nachricht":
+                    msgkey(chat_id, msg_id, callback_id)
+
+                else:
+                    error(chat_id)
+
+            elif menue[:8] == "schulden":
+                if menue[:19] == "schulden/begleichen":
+                    if button == "alleszahlen":
+                        delldebt(chat_id, msg_id, callback_id)
+
+                    elif button == "schulden":
+                        debt(chat_id, msg_id, callback_id)
+
+                    else:
+                        error(chat_id)
+
+                elif button == "schuldenbegleichen":
+                    cleardebt(chat_id, msg_id, callback_id)
+
+                elif button == "0,50€":
+                    adddebts(0.5, chat_id, callback_id, msg_id)
+
+                elif button == "0,70€":
+                    adddebts(0.7, chat_id, callback_id, msg_id)
+
+                elif button == "1,00€":
+                    adddebts(1.0, chat_id, callback_id, msg_id)
+
+                elif button == "1,25€":
+                    adddebts(1.25, chat_id, callback_id, msg_id)
+
+                elif button == "1,50€":
+                    adddebts(1.5, chat_id, callback_id, msg_id)
+
+                elif button == "1,75€":
+                    adddebts(1.75, chat_id, callback_id, msg_id)
+
+                else:
+                    error(chat_id)
+
+            elif menue[:13] == "einkaufsliste":
+
+                if menue[:23] == "einkaufsliste/entfernen":
+                    if dellitem(chat_id, msg_id, callback_id, button):
+                        pass
+
+                    elif button == "alleslöschen":
+                        dellshoplist(chat_id, msg_id, callback_id)
+
+                    else:
+                        error(chat_id)
+
+                elif button == "hinzufügen":
+                    addshoplist(chat_id, msg_id, callback_id)
+
+                elif button == "entfernen":
+                    clearshoplist(chat_id, msg_id, callback_id)
+
+                else:
+                    error(chat_id)
+
+            elif menue[:4] == "info":
+                if showinfo(chat_id, msg_id, callback_id, button):
+                    pass
+
+                elif menue[:12] == "info/löschen":
+                    if deleteinfo(chat_id, msg_id, callback_id, button):
+                        pass
+                    else:
+                        error(chat_id)
+
+                elif button == "infolöschen":
+                    dellinfo(chat_id, msg_id, callback_id)
+
+                elif button == "infotexthinzufügen":
+                    addinfo(chat_id, msg_id, callback_id, msg)
+
+                else:
+                    error(chat_id)
+
+            elif menue == "tür":
+
+                if button == "türzu":
+                    closedoor(chat_id, msg_id, callback_id)
+
+                elif button == "türoffen":
+                    opendoor(chat_id, msg_id, callback_id)
+
+                else:
+                    error(chat_id)
+
+        else:
+            error(chat_id)
 
 
 
@@ -901,131 +1082,56 @@ def handle(msg):
         callback_id = msg["id"]
         menue = users[str(chat_id)]["menue"]
 
-        if button == "haupt":
-            mainmenu(chat_id, msg_id, callback_id)
 
-        elif button == "hilfe":
-            help_button(chat_id, msg_id, callback_id)
 
-        elif button == "zurück":
+        # elif menue[:13] == "einkaufsliste":
+        #
+        #     if menue[:23] == "einkaufsliste/entfernen":
+        #         if dellitem(chat_id, msg_id, callback_id, button):
+        #             pass
+        #
+        #         elif button == "alleslöschen":
+        #             dellshoplist(chat_id, msg_id, callback_id)
+        #
+        #         else:
+        #             error(chat_id)
+        #
+        #     elif button == "hinzufügen":
+        #         addshoplist(chat_id, msg_id, callback_id)
+        #
+        #     elif button == "entfernen":
+        #         clearshoplist(chat_id, msg_id, callback_id)
+        #
+        #     else:
+        #         error(chat_id)
 
-            if menue == "info/löschen":
-                info(chat_id, msg_id, callback_id)
+        if menue == "Gruppen":
 
-            elif menue == "einkaufsliste/entfernen":
-                shoplist(chat_id, msg_id, callback_id)
+            for tag in data["chats"]:
+                if button == "chat" + tag:
+                    print("Gruppenbutton gedrückt!")
+                    bot.answerCallbackQuery(callback_id)
 
-            elif menue == "schulden/begleichen":
-                debt(chat_id, msg_id, callback_id)
+                    users[str(chat_id)]["menue"] = "Gruppen/Senden"
+                    users[str(chat_id)]["forward_to"] = data["chats"][tag][0]
+                    save("Daten/users.json", users)
 
-            elif menue == "info/löschen":
-                info(chat_id, msg_id, callback_id)
+                    bot.sendMessage(chat_id, "Bitte sende mir deine Nachricht, dann leite ich sie an " + data["chats"][tag][1] + " weiter...", reply_markup=build_keyboard_menu(const.menu_basic))
 
-        elif menue == "haupt":
+            if button == "springer":
+                users[str(chat_id)]["modus"] = MO_SPRINGER
+                save("Daten/users.json", users)
 
-            if button == "gruppen":
-                group(chat_id, msg_id, callback_id)
+                aktuelle_springer = ""
+                for id in users:
+                    if users[id]["is_springer"]:
+                        aktuelle_springer += users[id]["name"] + ", "
+                aktuelle_springer = aktuelle_springer[:-2]
 
-            elif button == "info":
-                info(chat_id, msg_id, callback_id)
+                bot.sendMessage(chat_id, "Schick mir bitte deine Nachricht, dann leite ich sie weiter an " + aktuelle_springer, reply_markup=build_keyboard_menu(const.menu_basic))
 
-            elif button == "schlüssel":
-                key(chat_id, msg_id, callback_id)
-
-            elif button == "schulden":
-                debt(chat_id, msg_id, callback_id)
-
-            elif button == "einkaufsliste":
-                shoplist(chat_id, msg_id, callback_id)
-
-            elif button == "tür":
-                door(chat_id, msg_id, callback_id)
-
-            else:
-                error(chat_id)
-
-        elif menue == "schlüssel":
-
-            if button =="schlüsselhinzufügen":
-                addkey(chat_id, msg_id, callback_id)
-
-            elif button == "schlüsselentfernen":
-                rmkey(chat_id, msg_id, callback_id)
-
-            elif button == "schlüsselnachricht":
-                msgkey(chat_id, msg_id, callback_id)
-
-            else:
-                error(chat_id)
-
-        elif menue[:8] == "schulden":
-            if menue[:19] == "schulden/begleichen":
-                if button == "alleszahlen":
-                    delldebt(chat_id, msg_id, callback_id)
-
-                elif button == "schulden":
-                    debt(chat_id, msg_id, callback_id)
-
-                else:
-                    error(chat_id)
-
-            elif button == "schuldenbegleichen":
-                cleardebt(chat_id, msg_id, callback_id)
-
-            elif button == "0,50€":
-                adddebts(0.5, chat_id, callback_id, msg_id)
-
-            elif button == "0,70€":
-                adddebts(0.7, chat_id, callback_id, msg_id)
-
-            elif button == "1,00€":
-                adddebts(1.0, chat_id, callback_id, msg_id)
-
-            elif button == "1,25€":
-                adddebts(1.25, chat_id, callback_id, msg_id)
-
-            elif button == "1,50€":
-                adddebts(1.5, chat_id, callback_id, msg_id)
-
-            elif button == "1,75€":
-                adddebts(1.75, chat_id, callback_id, msg_id)
-
-            else:
-                error(chat_id)
-
-        elif menue[:13] == "einkaufsliste":
-
-            if menue[:23] == "einkaufsliste/entfernen":
-                if dellitem(chat_id, msg_id, callback_id, button):
-                    pass
-
-                elif button == "alleslöschen":
-                    dellshoplist(chat_id, msg_id, callback_id)
-
-                else:
-                    error(chat_id)
-
-            elif button == "hinzufügen":
-                addshoplist(chat_id, msg_id, callback_id)
-
-            elif button == "entfernen":
-                clearshoplist(chat_id, msg_id, callback_id)
-
-            else:
-                error(chat_id)
-
-        elif menue == "gruppen":
-            if msggroup(chat_id, msg_id, callback_id, button):
-                pass
-
-            elif button == "springer":
-                jumper(chat_id, msg_id, callback_id)
-
-            elif button == "all":
-                all(chat_id, msg_id, msg["from"]["id"])
-
-            else:
-                error(chat_id)
+            # elif button == "all":
+            #     all(chat_id, msg_id, msg["from"]["id"])
 
         elif menue[:4] == "info":
             if showinfo(chat_id, msg_id, callback_id, button):
