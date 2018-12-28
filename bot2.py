@@ -134,7 +134,7 @@ def build_name(msg):
     else:
         return msg["chat"]["title"]
 
-def build_button_menu(items, footer=None, identifier=""): # TODO
+def build_button_menu(items, footer=None, identifier=""):
     menu = "{\"inline_keyboard\":["
 
     for item in items:
@@ -204,16 +204,6 @@ def add_debts(betrag, chat_id):
     pickle_save("Daten/schulden.bin", bank)
 
     display_message = bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.", reply_markup=build_keyboard_menu(const.menu_make_debts))
-
-def info(chat_id, msg_id, callback_id):
-    """Shows info-menu."""
-
-    bot.answerCallbackQuery(callback_id)
-
-    users[str(chat_id)]["menue"] = ME_INFO
-    save("Daten/users.json", users)
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_button_menu(data["infos"], identifier="info"))
 
 # TODO die
 def door(chat_id, msg_id, callback_id):
@@ -380,14 +370,6 @@ def msggroup(chat_id, msg_id, callback_id, button):
             users[str(chat_id)]["forward_to"] = data["chats"][tag][0]
             save("Daten/users.json", users)
             display_message = bot.editMessageText((chat_id, msg_id), "Bitte sende mir deine Nachricht, dann leite ich sie an " + data["chats"][tag][1] + " weiter...", reply_markup=json.dumps(menüs["nachrichten"]))
-
-            return True
-
-def showinfo(chat_id, msg_id, callback_id, button):
-    for info in data["infos"]:
-        if button == "info" + hashlib.md5(info.encode()).hexdigest():
-            bot.answerCallbackQuery(callback_id)
-            display_message= bot.editMessageText((chat_id, msg_id), data["infos"][info][1], reply_markup=json.dumps(menüs["nachrichten"]))
 
             return True
 
@@ -752,10 +734,16 @@ def handle(msg):
 
                 bot.sendMessage(chat_id, help_str, reply_markup=build_keyboard_menu(const.menu_basic, resize_keyboard=True))
 
-            elif button == "Zurück":
+            elif button == "Zurück": # TODO: Dopplungen überall! Kann man das nicht klüger machen?
 
-                if menue == "info/löschen":
-                    info(chat_id, msg_id, callback_id)
+                if menue == "Info/Anzeigen":
+                    # TODO: Das ist das selbe wie der Hauptmenü-Button. Hier müssen wir also ein besseres System finden. Vielleicht auch unten auf Zurück-Buttons reagieren?
+                    users[str(chat_id)]["menue"] = "Info"
+
+                    bot.sendMessage(chat_id, "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_keyboard_menu(const.menu_info_main))
+                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"]))["message_id"]
+
+                    save("Daten/users.json", users)
 
                 elif menue == "Einkaufsliste/Entfernen":
                     # TODO: Das ist das selbe wie der Hauptmenü-Button. Hier müssen wir also ein besseres System finden. Vielleicht auch unten auf Zurück-Buttons reagieren?
@@ -782,10 +770,11 @@ def handle(msg):
 
                 elif button == "Info":
                     users[str(chat_id)]["menue"] = "Info"
-                    save("Daten/users.json", users)
 
                     bot.sendMessage(chat_id, "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_keyboard_menu(const.menu_info_main))
-                    bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"], identifier="info"))
+                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"]))["message_id"]
+
+                    save("Daten/users.json", users)
 
                 elif button == "Schlüssel":
                     schlüssel_text = "Die aktuellen Schlüsselträger sind: Das Faust"
@@ -1076,11 +1065,11 @@ def handle(msg):
         #     else:
         #         error(chat_id)
 
+        # Auf Gruppen-Buttons reagieren
         if menue == "Gruppen":
 
             for tag in data["chats"]:
                 if button == "chat" + tag:
-                    print("Gruppenbutton gedrückt!")
                     bot.answerCallbackQuery(callback_id)
 
                     users[str(chat_id)]["menue"] = "Gruppen/Senden"
@@ -1104,33 +1093,24 @@ def handle(msg):
             # elif button == "all":
             #     all(chat_id, msg_id, msg["from"]["id"])
 
-        elif menue[:4] == "info":
-            if showinfo(chat_id, msg_id, callback_id, button):
-                pass
+        # TODO: data["info"] einfacher speichern
+        # Auf Info-Anzeigen-Buttons reagieren
+        elif menue == "Info":
+            # Wenn Info zu Button, dann anzeigen. Wenn nicht (alter Button wurde geklickt, oder sie wurde schon gelöscht), Fehlermeldung
+            if button in data["infos"]:
+                users[str(chat_id)]["menue"] = "Info/Anzeigen"
+                save("Daten/users.json", users)
 
-            elif menue[:12] == "info/löschen":
-                if deleteinfo(chat_id, msg_id, callback_id, button):
-                    pass
-                else:
-                    error(chat_id)
-
-            elif button == "infolöschen":
-                dellinfo(chat_id, msg_id, callback_id)
-
-            elif button == "infotexthinzufügen":
-                addinfo(chat_id, msg_id, callback_id, msg)
-
+                bot.answerCallbackQuery(callback_id)
+                bot.sendMessage(chat_id, "Unter _" + button + "_ habe ich folgendes gespeichert:", parse_mode="Markdown")
+                bot.sendMessage(chat_id, data["infos"][button][1], reply_markup=build_keyboard_menu(const.menu_back_main))
             else:
-                error(chat_id)
+                bot.sendMessage(chat_id, "Es gibt keine Information namens _" +  button + "_. Tippe auf Zeilen, um Informationen zu erhalten.", parse_mode="Markdown", reply_markup=build_button_menu(data["infos"]))
 
-        elif menue == "tür":
-
-            if button == "türzu":
-                closedoor(chat_id, msg_id, callback_id)
-
-            elif button == "türoffen":
-                opendoor(chat_id, msg_id, callback_id)
-
+        # Auf Info-Löschen-Buttons reagieren
+        elif menue[:12] == "info/löschen":
+            if deleteinfo(chat_id, msg_id, callback_id, button):
+                pass
             else:
                 error(chat_id)
 
