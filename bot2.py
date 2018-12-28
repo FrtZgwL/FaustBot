@@ -826,13 +826,14 @@ def handle(msg):
                 # Submenus
                 if menue == "Info/Hinzufügen/Name":
                     # Erster Durchlauf: Name und Typ eingeben
-                    data["infos"][txt] = ["TEXT", "...Leere Information..."]
+                    data["infos"][button] = ["TEXT", "...Leere Information..."]
                     save("Daten/data.json", data)
                     # Menü für zweiten Durchlauf ändern
                     users[str(chat_id)]["menue"] = "Info/Hinzufügen/Text"
+                    users[str(chat_id)]["temp"] = button
                     save("Daten/users.json", data)
 
-                    infotext = txt
+                    infotext = button
 
                     # Text eingabe auffordern
                     bot.sendMessage(chat_id, "Schick mir jetzt bitte die Informationen, die du speichern willst", reply_markup=build_remove_menu())
@@ -840,7 +841,8 @@ def handle(msg):
                 elif menue == "Info/Hinzufügen/Text":
                     if infotext in data["infos"]:
                         # Zweiter Durchlauf: Text eingeben
-                        data["infos"][button][1] = button
+                        name = users[str(chat_id)]["temp"]
+                        data["infos"][name][1] = button
                         save("Daten/data.json", data)
 
                         bot.sendMessage(chat_id, "Die neuen Informationen wurden unter dem Namen _" + infotext + "_ gespeichert.", parse_mode="Markdown", reply_markup=build_keyboard_menu(const.menu_main))
@@ -944,7 +946,6 @@ def handle(msg):
                     bot.sendMessage(chat_id, "_" + txt + "_ wurde zur Einkaufsliste hinzugefügt.", parse_mode="Markdown")
                     bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove))
 
-
                 elif button == "Hinzufügen":
                     users[str(chat_id)]["menue"] = "Einkaufsliste/Hinzufügen"
                     save("Daten/users.json", users)
@@ -957,6 +958,17 @@ def handle(msg):
 
                     bot.sendMessage(chat_id, "Welche Artikel willst du entfernen?", reply_markup=build_keyboard_menu(const.menu_back_main))
                     users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"], const.footer_shoplist_delete))["message_id"]
+
+                else: # TODO: Dopplung mit "Einkaufsliste/Hinzufügen"
+                    artikel = txt + " (von " + users[str(chat_id)]["name"] + ")"
+
+                    data["einkaufsliste"].append(artikel)
+                    save("Daten/data.json", data)
+                    users[str(chat_id)]["menue"] = "Einkaufsliste"
+                    save("Daten/users.json", users)
+
+                    bot.sendMessage(chat_id, "_" + txt + "_ wurde zur Einkaufsliste hinzugefügt.", parse_mode="Markdown")
+                    bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove))
 
             elif menue[:4] == "info":
                 if showinfo(chat_id, msg_id, callback_id, button):
