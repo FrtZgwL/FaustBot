@@ -745,6 +745,15 @@ def handle(msg):
 
                     save("Daten/users.json", users)
 
+                elif menue == "Info/Entfernen":
+                    # TODO: Das ist das selbe wie der Hauptmenü-Button. Hier müssen wir also ein besseres System finden. Vielleicht auch unten auf Zurück-Buttons reagieren?
+                    users[str(chat_id)]["menue"] = "Info"
+
+                    bot.sendMessage(chat_id, "Tippe auf Zeilen, um Informationen zu erhalten.", reply_markup=build_keyboard_menu(const.menu_info_main))
+                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"]))["message_id"]
+
+                    save("Daten/users.json", users)
+
                 elif menue == "Einkaufsliste/Entfernen":
                     # TODO: Das ist das selbe wie der Hauptmenü-Button. Hier müssen wir also ein besseres System finden. Vielleicht auch unten auf Zurück-Buttons reagieren?
                     users[str(chat_id)]["menue"] = "Einkaufsliste"
@@ -852,7 +861,12 @@ def handle(msg):
                     display_message = bot.sendMessage(chat_id, "Schick mir bitte den Namen unter dem du deine Infos speichern willst.", reply_markup=build_remove_menu())
 
                 elif button == "Entfernen":
-                    pass
+                    users[str(chat_id)]["menue"] = "Info/Entfernen"
+
+                    bot.sendMessage(chat_id, "Tippe Buttons an, um Informationen zu löschen.", reply_markup=build_keyboard_menu(const.menu_back_main))
+                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Informationen:", reply_markup=build_button_menu(data["infos"]))["message_id"]
+
+                    save("Daten/users.json", users)
 
             elif menue == "Gruppen/Senden":
                 try:
@@ -1105,7 +1119,21 @@ def handle(msg):
                 bot.sendMessage(chat_id, "Unter _" + button + "_ habe ich folgendes gespeichert:", parse_mode="Markdown")
                 bot.sendMessage(chat_id, data["infos"][button][1], reply_markup=build_keyboard_menu(const.menu_back_main))
             else:
+                bot.answerCallbackQuery(callback_id)
                 bot.sendMessage(chat_id, "Es gibt keine Information namens _" +  button + "_. Tippe auf Zeilen, um Informationen zu erhalten.", parse_mode="Markdown", reply_markup=build_button_menu(data["infos"]))
+
+        elif menue == "Info/Entfernen":
+            # Wenn Info zu Button, dann löschen und bearbeiten. Wenn nicht (alter Button wurde geklickt, oder sie wurde schon gelöscht), Fehlermeldung
+            if button in data["infos"]:
+                bot.answerCallbackQuery(callback_id)
+
+                del data["infos"][button]
+                save("Daten/data.json", data)
+
+                bot.editMessageText((chat_id, users[str(chat_id)]["display_message"]), "Tippe Buttons an, um Informationen zu löschen.", reply_markup=build_button_menu(data["infos"]))
+            else:
+                bot.answerCallbackQuery(callback_id)
+                bot.sendMessage(chat_id, "Es gibt keine Information namens _" +  button + "_. Tippe auf Zeilen, um Informationen zu löschen.", parse_mode="Markdown", reply_markup=build_button_menu(data["infos"]))
 
         # Auf Info-Löschen-Buttons reagieren
         elif menue[:12] == "info/löschen":
