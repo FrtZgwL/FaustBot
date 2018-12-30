@@ -128,6 +128,17 @@ def pickle_save(pfad, obj):
     with open(pfad, "wb") as f:
         pickle.dump(obj, f)
 
+def build_key_text():
+    key_text = "Die aktuellen Schlüsselträger sind: Das Faust"
+
+    for user in users:
+        if users[user]["is_schlüsselträger"]:
+            key_text = key_text + ", " + users[user]["name"]
+
+    return key_text
+
+
+
 def build_name(msg):
     if msg["chat"]["type"] == "private":
         return msg["from"]["first_name"] + (" " + msg["chat"]["last_name"] if "last_name" in msg["chat"] else "")
@@ -190,24 +201,6 @@ def build_shoplist_text(data):
 # ---   FUNKTIONEN FÜR BUTTON INTERAKTION   --- #
 #################################################
 
-def key(chat_id, msg_id, callback_id):
-    global users
-    bot.answerCallbackQuery(callback_id)
-
-    users[str(chat_id)]["menue"] = ME_SCHLÜSSEL
-    save("Daten/users.json", users)
-
-    schlüssel_text = "Die aktuellen Schlüsselträger sind: Das Faust"
-
-    for user in users:
-        if users[user]["is_schlüsselträger"]:
-            schlüssel_text = schlüssel_text + ", " + users[user]["name"]
-
-    if users[str(chat_id)]["is_schlüsselträger"]:
-        display_message = bot.editMessageText((chat_id, msg_id), schlüssel_text, reply_markup=json.dumps(menüs["habschlüssel"]))
-    else:
-        display_message = bot.editMessageText((chat_id, msg_id), schlüssel_text, reply_markup=json.dumps(menüs["habkeinenschlüssel"]))
-
 def addkey(chat_id, msg_id, callback_id):
     global users
     warning = ""
@@ -239,15 +232,6 @@ def rmkey(chat_id, msg_id, callback_id):
     bot.answerCallbackQuery(callback_id, text="Du wurdest als Schlüsselträger entfernt", show_alert=True)
 
     mainmenu(chat_id, msg_id, callback_id)
-
-def msgkey(chat_id, msg_id, callback_id):
-    global users
-    bot.answerCallbackQuery(callback_id)
-
-    users[str(chat_id)]["modus"] = MO_SCHLÜSSEL
-    save("Daten/users.json", users)
-
-    display_message = bot.editMessageText((chat_id, msg_id), "Schick mir bitte deine Nachricht, dann leite ich sie weiter...", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def all(chat_id, msg_id, from_id):
     global users
@@ -353,14 +337,6 @@ def chat_schuldenmachen(chat_id, txt):
 
     except ValueError as e:
         display_message = bot.sendMessage(chat_id, "Bitte sende mir deine Schulden entweder als ganze Zahl _10_, bzw. Kommazahl im Format:  _1,2_ oder _1.2_. Deine aktuellen Schulden sind: _" + str(aktuelle_schulden).replace(".", ",") + "€_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_schluessel(chat_id, msg_id):
-    # Nachricht an alle Schlüsselträger senden
-    for user in users:
-        if users[user]["is_schlüsselträger"]:
-            bot.forwardMessage(int(user), chat_id, msg_id)
-            display_message = bot.sendMessage(int(user), "Klick auf _Hauptmenü_, um zurück zum Hauptmenü zu kommen", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=json.dumps(menüs["nachrichten"]))
 
 def chat_normal(chat_id, txt, msg):
     global display_message
@@ -632,19 +608,13 @@ def handle(msg):
                     save("Daten/users.json", users)
 
                 elif button == "Schlüssel":
-                    schlüssel_text = "Die aktuellen Schlüsselträger sind: Das Faust"
-
-                    for user in users:
-                        if users[user]["is_schlüsselträger"]:
-                            schlüssel_text = schlüssel_text + ", " + users[user]["name"]
-
                     users[str(chat_id)]["menue"] = "Schlüssel"
                     save("Daten/users.json", users)
 
                     if users[str(chat_id)]["is_schlüsselträger"]:
-                        bot.sendMessage(chat_id, schlüssel_text, reply_markup=build_keyboard_menu(const.menu_has_key))
+                        bot.sendMessage(chat_id, build_key_text(), reply_markup=build_keyboard_menu(const.menu_has_key))
                     else:
-                        bot.sendMessage(chat_id, schlüssel_text, reply_markup=build_keyboard_menu(const.menu_has_no_key))
+                        bot.sendMessage(chat_id, build_key_text(), reply_markup=build_keyboard_menu(const.menu_has_no_key))
 
                 elif button == "Schulden":
                     users[str(chat_id)]["menue"] = "Schulden"
@@ -725,9 +695,27 @@ def handle(msg):
                 finally:
                     users[str(chat_id)]["menue"] = "Hauptmenü"
 
-            elif menue == "Schlüssel":
+            elif menue[:9] == "Schlüssel":
 
-                if button =="Hinzufügen":
+                if menue == "Schlüssel/Nachricht":
+                    # Nachricht an alle Schlüsselträger senden
+                    for user in users:
+                        if users[user]["is_schlüsselträger"]:
+                            users[str(chat_id)]["menue"] = "Hauptmenü"
+                            save("Daten/users.json", users)
+
+                            bot.forwardMessage(int(user), chat_id, msg["message_id"])
+
+                    users[str(chat_id)]["menue"] = "Schlüssel"
+                    save("Daten/users.json", users)
+
+                    if users[str(chat_id)]["is_schlüsselträger"]:
+                        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_key))
+                    else:
+                        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_no_key))
+                    bot.sendMessage(chat_id, build_key_text()) # Kant
+
+                elif button =="Hinzufügen":
                     warning = None
 
                     anzahl_schlüsselträger = 0
@@ -744,15 +732,20 @@ def handle(msg):
                     if warning:
                         bot.sendMessage(chat_id, warning)
                     bot.sendMessage(chat_id, "Du wurdest als Schlüsselträger hinzugefügt", reply_markup=build_keyboard_menu(const.menu_has_key))
+                    bot.sendMessage(chat_id, build_key_text())
 
                 elif button == "Entfernen":
                     users[str(chat_id)]["is_schlüsselträger"] = False
                     save("Daten/users.json", users)
 
                     bot.sendMessage(chat_id, "Du wurdest als Schlüsselträger entfernt", reply_markup=build_keyboard_menu(const.menu_has_no_key))
+                    bot.sendMessage(chat_id, build_key_text())
 
                 elif button == "Nachricht":
-                    msgkey(chat_id, msg_id, callback_id)
+                    users[str(chat_id)]["menue"] = "Schlüssel/Nachricht"
+                    save("Daten/users.json", users)
+
+                    bot.sendMessage(chat_id, "Schick mir bitte deine Nachricht, dann leite ich sie an die Schlüsselträger weiter...", reply_markup=build_remove_menu())
 
                 else:
                     error(chat_id)
