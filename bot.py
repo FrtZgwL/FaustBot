@@ -689,10 +689,11 @@ def handle(msg):
                         data["infos"][name][1] = button
                         save("Daten/data.json", data)
 
-                        bot.sendMessage(chat_id, "Die neuen Informationen wurden unter dem Namen _" + infotext + "_ gespeichert.", parse_mode="Markdown", reply_markup=build_keyboard_menu(const.menu_main))
+                        bot.sendMessage(chat_id, "Die neuen Informationen wurden unter dem Namen _" + infotext + "_ gespeichert.", parse_mode="Markdown", reply_markup=build_keyboard_menu(const.menu_info_main))
+                        bot.sendMessage(chat_id, "Info", reply_markup=build_button_menu(data["infos"]))
 
                         infotext = ""
-                        users[str(chat_id)]["menue"] = "Hauptmenü"
+                        users[str(chat_id)]["menue"] = "Info"
                         save("Daten/users.json", users)
 
                     # TODO: Brauchen wir das? Funktioniert das?
@@ -709,8 +710,8 @@ def handle(msg):
                 elif button == "Entfernen":
                     users[str(chat_id)]["menue"] = "Info/Entfernen"
 
-                    bot.sendMessage(chat_id, "Tippe Buttons an, um Informationen zu löschen.", reply_markup=build_keyboard_menu(const.menu_back_main))
-                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Informationen:", reply_markup=build_button_menu(data["infos"]))["message_id"]
+                    bot.sendMessage(chat_id, "Informationen", reply_markup=build_keyboard_menu(const.menu_back_main))
+                    users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Tippe Buttons an, um Informationen zu löschen.", reply_markup=build_button_menu(data["infos"]))["message_id"]
 
                     save("Daten/users.json", users)
 
