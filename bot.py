@@ -265,137 +265,6 @@ def chat_passwort(chat_id, txt):
     else:
         display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
 
-
-
-def chat_gruppen(chat_id, txt, msg_id):
-    global display_message
-    global data
-
-    try:
-        bot.forwardMessage(users[str(chat_id)]["forward_to"], chat_id, msg_id)
-        if users[str(chat_id)]["forward_to"] > 0: # only for private chats
-            bot.sendMessage(users[str(chat_id)]["forward_to"], "Hauptmenü", reply_markup=json.dumps(menüs["nachrichten"]))
-
-        display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
-    except telepot.exception.BotWasKickedError:
-        display_message = bot.sendMessage(chat_id, "Sorry, aber die Gruppe gibt es nicht mehr. Bitte melde dich bei " + SUPPORTTEAM + ".", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_springer(chat_id, txt, msg_id):
-    global display_message
-
-    there_are_jumpers = False
-
-    for id in users:
-        if users[id]["is_springer"]:
-            there_are_jumpers = True
-
-            bot.forwardMessage(int(id), chat_id, msg_id)
-            bot.sendMessage(int(id), "Hauptmenü", reply_markup=json.dumps(menüs["nachrichten"]))
-
-    if there_are_jumpers:
-        display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=json.dumps(menüs["nachrichten"]))
-
-    else:
-        display_message = bot.sendMessage(chat_id, "Es gibt im Moment kein Springer", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_schuldenzahlen(chat_id, txt):
-    global users
-    global display_message
-    aktuelle_schulden = users[str(chat_id)]["schulden"]
-    #aktuelle_schulden = round(aktuelle_schulden, 2)
-
-    try:
-        betrag = abs(float(txt.replace(",", ".").replace("€", "")))
-        #betrag = round(betrag, 2)
-
-        if aktuelle_schulden - betrag < 0:
-            display_message = bot.sendMessage(chat_id, "Du schuldest dem Faust " + str(aktuelle_schulden).replace(".", ",") + "€. Du kannst nicht mehr zurückzahlen, als du dem Faust schuldest. Bitte sende mir den zurückgezahlten Betrag als Kommazahl", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-        else:
-            users[str(chat_id)]["schulden"] = round(aktuelle_schulden - betrag, 2)
-            users[str(chat_id)]["modus"] = MO_SCHULDENZAHLEN
-            save("Daten/users.json", users)
-
-            display_message = bot.sendMessage(chat_id, "Von deiner Schuldenliste wurden " + str(betrag).replace(".", ",") + "€ gestrichen. Du schuldest dem Faust noch " + str(round(aktuelle_schulden-betrag,2)).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["schuldenbegleichen"]))
-
-    except ValueError as e:
-        display_message = bot.sendMessage(chat_id, "Bitte sende mir deine Schulden entweder als ganze Zahl _10_, bzw. Kommazahl im Format:  _1,2_ oder _1.2_. Deine aktuellen Schulden sind: _" + str(aktuelle_schulden).replace(".", ",") + "€_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_schuldenmachen(chat_id, txt):
-    global users
-    global display_message
-    aktuelle_schulden = users[str(chat_id)]["schulden"]
-
-    try:
-        betrag = abs(float(txt.replace(",", ".").replace("€", "")))
-
-        users[str(chat_id)]["schulden"] = round(aktuelle_schulden + betrag, 2)
-        users[str(chat_id)]["modus"] = MO_SCHULDENMACHEN
-        save("Daten/users.json", users)
-
-        display_message = bot.sendMessage(chat_id, "Zu deinen Schulden wurden " + str(betrag).replace(".", ",") + "€ addiert. Du schuldest dem Faust noch " + str(aktuelle_schulden+betrag).replace(".", ",") + "€", parse_mode="Markdown", reply_markup=json.dumps(menüs["schulden"]))
-
-    except ValueError as e:
-        display_message = bot.sendMessage(chat_id, "Bitte sende mir deine Schulden entweder als ganze Zahl _10_, bzw. Kommazahl im Format:  _1,2_ oder _1.2_. Deine aktuellen Schulden sind: _" + str(aktuelle_schulden).replace(".", ",") + "€_", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-
-def chat_normal(chat_id, txt, msg):
-    global display_message
-
-    if txt[0] == "#":
-        txt_split =txt.strip().split(" ")
-        i= 0
-        tags = []
-        while i < len(txt_split) and txt_split[i][0] == "#":
-            tags.append(txt_split[i].lower())
-            i+=1
-        if i != len(txt_split) or "reply_to_message" in msg:
-            approved = []
-            rejected = []
-            for tag in tags:
-                if tag in data["chats"]:
-                    if data["chats"][tag][0] !=str(chat_id):
-                        group_id = data["chats"][tag][0]
-                        group_name = data["chats"][tag][1]
-
-                        try:
-                            bot.forwardMessage(group_id, chat_id, msg["message_id"])
-                            bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet an <i>" + group_name + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
-                            if "reply_to_message" in msg:
-                                bot.forwardMessage(group_id, chat_id, msg["reply_to_message"]["message_id"])
-                                bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet an <i>" + group_name + "</i>", parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
-                            approved.append(group_name)
-                        except telepot.exception.BotWasKickedError:
-                            rejected.append(tag)
-                else:
-                    rejected.append(tag)
-            if len(rejected) > 0:
-                bot.sendMessage(chat_id,"Ich konnte leider an folgende Tags keine Nachricht senden: <i>" + ", ".join(rejected) + "</i>\nFalls der Tag trotzdem in Gruppen angezeigt wird, wurde die Gruppe gelöscht bitte melde dich in diesem Fall bei " + SUPPORTTEAM + "." , parse_mode="HTML", reply_markup=json.dumps(menüs["error"]))
-        else:
-            # Fehler, weil leere Nachricht mit Tags
-            bot.sendMessage(chat_id, "Du kannst keine leeren Nachrichten senden. Bitte sende mir eine Nachricht mit den Tags", reply_markup=json.dumps(menüs["error"]))
-    else:
-        # Fehler, weil irgend ne Nachricht
-        error(chat_id)
-
-def chat_send_all(chat_id, msg_id, msg):
-    global display_message
-
-    benutzer = []
-    abgelehnte_benutzer = []
-
-    for user in users:
-        name = users[user]["name"]
-        try:
-            bot.forwardMessage(int(user), chat_id, msg["message_id"])
-            display_message = bot.sendMessage(int(user), "Klick auf _Hauptmenü_, um zurück zum Hauptmenü zu kommen", parse_mode="Markdown", reply_markup=json.dumps(menüs["nachrichten"]))
-
-            benutzer.append(name)
-        except telepot.exception.TelegramError:
-            abgelehnte_benutzer.append(name)
-
-    display_message = bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich an <i>" + ", ".join(benutzer) + " </i> weitergeleitet. Jetzt  kommen alle Namen an die es nicht geklappt hat:" + ", ".join(abgelehnte_benutzer), parse_mode="HTML", reply_markup=json.dumps(menüs["nachrichten"]))
-
-
-
 def handle(msg):
     global display_message
     global users
@@ -971,6 +840,7 @@ def handle(msg):
                 save("Daten/users.json", users)
 
                 bot.answerCallbackQuery(callback_id)
+                bot.editMessageText((chat_id, users[str(chat_id)]["display_message"]), "Info")
                 bot.sendMessage(chat_id, "Unter _" + button + "_ habe ich folgendes gespeichert:", parse_mode="Markdown")
                 bot.sendMessage(chat_id, data["infos"][button][1], reply_markup=build_keyboard_menu(const.menu_back_main))
             else:
