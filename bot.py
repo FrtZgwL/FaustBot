@@ -112,13 +112,12 @@ with open("Daten/schulden.bin", "rb") as f:
 # ---   Funktionen  --- #
 #########################
 
+# TODO: Dafür konsistentes System überlegen
 def error(chat_id):
-
-    users[str(chat_id)]["modus"] = MO_NORMAL
-    users[str(chat_id)]["menue"] = ME_HAUPT
+    users[str(chat_id)]["menue"] = "Hauptmenü"
     save("Daten/users.json", users)
 
-    display_message = bot.sendMessage(chat_id, "Ups! Irgendwas ist schiefgelaufen! Tippe auf \"Hilfe\" oder \"Hauptmenü\", um Hilfe zu erhalten oder zum Hauptmenü zurück zu gehen.", reply_markup=json.dumps(menüs["error"]))
+    bot.sendMessage(chat_id, "Ups! Irgendwas ist schiefgelaufen! Tippe auf \"Hilfe\", um Hilfe zu erhalten.", reply_markup=build_keyboard_menu(const.menu_main))
 
 def save(pfad, obj):
     with open(pfad, "w") as f:
@@ -628,8 +627,8 @@ def handle(msg):
 
                     bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
 
-                elif button == "tür":
-                    door(chat_id, msg_id, callback_id)
+                elif button == "Schichten":
+                    bot.sendMessage(chat_id, "Work in Progress! Sorry, aber das kann ich leider noch nicht. Funktion kommt hoffentlich bald in der Zukunft.")
 
                 else:
                     error(chat_id)
@@ -713,7 +712,7 @@ def handle(msg):
                         bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_key))
                     else:
                         bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_no_key))
-                    bot.sendMessage(chat_id, build_key_text()) # Kant
+                    bot.sendMessage(chat_id, build_key_text())
 
                 elif button =="Hinzufügen":
                     warning = None
@@ -748,7 +747,23 @@ def handle(msg):
                     bot.sendMessage(chat_id, "Schick mir bitte deine Nachricht, dann leite ich sie an die Schlüsselträger weiter...", reply_markup=build_remove_menu())
 
                 else:
-                    error(chat_id)
+                    # TODO: Dopplung mit "Schlüssel/Nachricht"
+                    # Nachricht an alle Schlüsselträger senden
+                    for user in users:
+                        if users[user]["is_schlüsselträger"]:
+                            users[str(chat_id)]["menue"] = "Hauptmenü"
+                            save("Daten/users.json", users)
+
+                            bot.forwardMessage(int(user), chat_id, msg["message_id"])
+
+                    users[str(chat_id)]["menue"] = "Schlüssel"
+                    save("Daten/users.json", users)
+
+                    if users[str(chat_id)]["is_schlüsselträger"]:
+                        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_key))
+                    else:
+                        bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich weitergeleitet.", reply_markup=build_keyboard_menu(const.menu_has_no_key))
+                    bot.sendMessage(chat_id, build_key_text())
 
             elif menue[:8] == "Schulden":
 
