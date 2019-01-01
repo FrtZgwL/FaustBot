@@ -315,22 +315,6 @@ def handle(msg):
                 else:
                     display_message = bot.sendMessage(chat_id, "Hey, du bist leider noch nicht als Nutzer hinzugefügt. Gib bitte erst das richtige Passwort ein. Bei Problemen kanns du dich immer an " + SUPPORTTEAM + " wenden")
 
-        # elif "/cheat" == txt[:len("/cheat")]:
-        #
-        #     chats = {}
-        #     global data
-        #
-        #     with open("Daten/chats.json", "r") as f:
-        #         chats = json.load(f)
-        #
-        #     for tag in chats:
-        #         id = chats[tag]["id"]
-        #         name = chats[tag]["name"]
-        #
-        #         data["chats"][tag] = [int(id), name] #TODO NOW
-        #
-        #     save("Daten/data.json", data)
-
         elif "/help" == txt[:5] or "/?" == txt[:2]:
             if str(chat_id) in users:
                 if users[str(chat_id)]["is_allowed"]:
@@ -402,8 +386,6 @@ def handle(msg):
             menue = users[str(chat_id)]["menue"]
 
             # --- TASTATURBUTTON INTERAKTION --- #
-            print(menue)
-
             button = txt
 
             # General buttons
@@ -697,76 +679,11 @@ def handle(msg):
                     bot.sendMessage(chat_id, "_" + txt + "_ wurde zur Einkaufsliste hinzugefügt.", parse_mode="Markdown")
                     bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove))
 
-            elif menue[:4] == "info":
-                if showinfo(chat_id, msg_id, callback_id, button):
-                    pass
-
-                elif menue[:12] == "info/löschen":
-                    if deleteinfo(chat_id, msg_id, callback_id, button):
-                        pass
-                    else:
-                        error(chat_id)
-
-                elif button == "infolöschen":
-                    dellinfo(chat_id, msg_id, callback_id)
-
-                elif button == "infotexthinzufügen":
-                    addinfo(chat_id, msg_id, callback_id, msg)
-
-                else:
-                    error(chat_id)
-
-            elif menue == "tür":
-
-                if button == "türzu":
-                    closedoor(chat_id, msg_id, callback_id)
-
-                elif button == "türoffen":
-                    opendoor(chat_id, msg_id, callback_id)
-
-                else:
-                    error(chat_id)
-
-        else:
-            error(chat_id)
-
-
-
 
             # --- ANTWORTEN IN PRIVATCHATS ---- #
 
             if modus == MO_PASSWORT:
                 chat_passwort(chat_id, txt)
-
-            elif modus == MO_NORMAL:
-                chat_normal(chat_id, txt, msg)
-
-            elif modus == MO_GRUPPEN:
-                chat_gruppen(chat_id, txt, msg["message_id"])
-
-            elif modus == MO_SPRINGER:
-                chat_springer(chat_id, txt, msg["message_id"])
-
-            elif modus == MO_SCHULDENZAHLEN: # TODO zu viel weg + negativ
-                chat_schuldenzahlen(chat_id, txt)
-
-            elif modus == MO_SCHULDENMACHEN:
-                chat_schuldenmachen(chat_id, txt)
-
-            elif modus == MO_SCHLÜSSEL:
-                chat_schluessel(chat_id, msg["message_id"])
-
-            elif modus == MO_EINKÄUFE:
-                chat_einkaeufe(chat_id, txt)
-
-            elif modus == MO_ADD_INFO_TEXT:
-                chat_add_info(chat_id, txt)
-
-            elif modus == MO_ALL:
-                chat_send_all(chat_id, msg["message_id"], msg)
-
-
-
 
 
 ########################################################
@@ -780,28 +697,6 @@ def handle(msg):
         callback_id = msg["id"]
         menue = users[str(chat_id)]["menue"]
 
-
-
-        # elif menue[:13] == "einkaufsliste":
-        #
-        #     if menue[:23] == "einkaufsliste/entfernen":
-        #         if dellitem(chat_id, msg_id, callback_id, button):
-        #             pass
-        #
-        #         elif button == "alleslöschen":
-        #             dellshoplist(chat_id, msg_id, callback_id)
-        #
-        #         else:
-        #             error(chat_id)
-        #
-        #     elif button == "hinzufügen":
-        #         addshoplist(chat_id, msg_id, callback_id)
-        #
-        #     elif button == "entfernen":
-        #         clearshoplist(chat_id, msg_id, callback_id)
-        #
-        #     else:
-        #         error(chat_id)
 
         # Auf Gruppen-Buttons reagieren
         if menue == "Gruppen":
@@ -860,13 +755,6 @@ def handle(msg):
                 bot.answerCallbackQuery(callback_id)
                 bot.sendMessage(chat_id, "Es gibt keine Information namens _" +  button + "_. Tippe auf Zeilen, um Informationen zu löschen.", parse_mode="Markdown", reply_markup=build_button_menu(data["infos"]))
 
-        # Auf Info-Löschen-Buttons reagieren
-        elif menue[:12] == "info/löschen":
-            if deleteinfo(chat_id, msg_id, callback_id, button):
-                pass
-            else:
-                error(chat_id)
-
         elif menue[:23] == "Einkaufsliste/Entfernen":
 
             if button == "alleslöschen":
@@ -888,14 +776,6 @@ def handle(msg):
                         bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
 
                         bot.editMessageText((chat_id, users[str(chat_id)]["display_message"]), "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"], const.footer_shoplist_delete))
-
-    else:
-        error(chat_id)
-
-
-    # debugging
-    #pp.pprint(msg)
-    #pp.pprint(users)
 
 
 #################################
