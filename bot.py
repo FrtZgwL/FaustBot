@@ -8,6 +8,7 @@ import time
 import json
 import pickle
 import hashlib
+import datenkraken
 from cProfile import runctx
 from telepot.loop import MessageLoop
 from constants import Constants as const
@@ -76,6 +77,7 @@ users = {}
 data = {}
 infotext = ""
 bank = debts.Bank()
+kraken = datenkraken.Datenkraken()
 
 
 
@@ -251,6 +253,20 @@ def all(chat_id, msg_id, from_id):
 # ---   FUNKTIONEN FÜR CHAT-INTERAKTION --- #
 #############################################
 
+def chat_passwort(chat_id, txt):
+    global data
+    global display_message
+
+    if hashlib.sha256(txt.encode()).hexdigest() == PASSWORT:
+        users[str(chat_id)]["is_allowed"] = True
+        users[str(chat_id)]["modus"] = MO_NORMAL
+        save("Daten/users.json", users)
+
+        bot.sendMessage(chat_id, "Du wurdest erfolgreich als Nutzer hinzugefügt! Viel Spaß!")
+        display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=json.dumps(menüs["haupt"]))
+    else:
+        display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
+
 def handle(msg):
     global display_message
     global users
@@ -291,7 +307,7 @@ def handle(msg):
 
                     bot.sendMessage(chat_id, "Hi, " + build_name(msg) + "!\nGib bitte das Passwort ein, um Zugriff zu erhalten. Falls du das Passwort nicht weiß, schreib eine Nachricht an " + SUPPORTTEAM + ".")
 
-                elif users[str(chat_id)]["menue"] != "Passwort":
+                elif users[str(chat_id)]["is_allowed"]:
                     users[str(chat_id)]["menue"] = "Hauptmenü"
                     save("Daten/users.json", users)
 
@@ -301,7 +317,13 @@ def handle(msg):
                     display_message = bot.sendMessage(chat_id, "Hey, du bist leider noch nicht als Nutzer hinzugefügt. Gib bitte erst das richtige Passwort ein. Bei Problemen kanns du dich immer an " + SUPPORTTEAM + " wenden")
 
         elif "/help" == txt[:5] or "/?" == txt[:2]:
-            bot.sendMessage(chat_id, "Work in Progress! Wir haben noch keinen aktualisieren Hilfe-Text geschrieben. Wende dich solange an " + SUPPORTTEAM + ".")
+            if str(chat_id) in users:
+                if users[str(chat_id)]["is_allowed"]:
+                    help_chat(chat_id)
+                else:
+                    bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Du musst zuerst das korrekte Passwort eingeben.")
+            else:
+                bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Du musst zuerst das korrekte Passwort eingeben.")
 
         elif "/admin" == txt[:6]:
             if msg["chat"]["type"] != "private":
@@ -339,23 +361,19 @@ def handle(msg):
 
                     bot.sendMessage(chat_id, "_" + txt.lower()[5:] + "_ wurde als neue Gruppe hinzugefügt.", parse_mode="Markdown")
 
+        elif "/debts" == txt[:6]:
+            if (users[str(chat_id)]["is_admin"] | users[str(chat_id)]["is_finanzen"]):
+                for id in users:
+                    try:
+                        bot.sendMessage(chat_id, users[id]["name"] + "\n" + bank.get_debts(int(id)))
+                    except IndexError:
+                        bot.sendMessage(chat_id, users[id]["name"] + "\n" "Keine Einträge+\n\n")
+            else:
+                bot.sendMessage(chat_id, "Sorry, aber du hast nicht das Recht, diese Funktion zu benutzen...\nDrück auf /start um den Bot zu starten.")
+
 #######################################################
 #           ---   CHAT INTERAKTION    --- #
 #######################################################
-
-        # User stays in menu "Password" until he/she enters the correct password.
-        elif ((str(chat_id) in users) and users[str(chat_id)]["menue"] == "Passwort"):
-
-                # if hashlib.sha256(button.encode()).hexdigest() == PASSWORT: TODO: Sicheres System zum Laufen bringen
-                if txt == "Pup$Party":
-                    users[str(chat_id)]["menue"] = "Hauptmenü"
-                    save("Daten/users.json", users)
-
-                    bot.sendMessage(chat_id, "Du wurdest erfolgreich als Nutzer hinzugefügt! Viel Spaß!")
-                    display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
-
-                else:
-                    display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
 
         elif msg["chat"]["type"] == "private":
             # Wenn noch kein Nutzer, Fehlermeldung und rausschmeißen
@@ -421,6 +439,20 @@ def handle(msg):
 
                 elif menue == "info/löschen":
                     info(chat_id, msg_id, callback_id)
+
+            elif menue == "Passwort":
+
+                # if hashlib.sha256(button.encode()).hexdigest() == PASSWORT: TODO: Sicheres System zum Laufen bringen
+                if button == "Pup$Party":
+                    users[str(chat_id)]["is_allowed"] = True
+                    users[str(chat_id)]["modus"] = "Hauptmenü"
+                    save("Daten/users.json", users)
+
+                    bot.sendMessage(chat_id, "Du wurdest erfolgreich als Nutzer hinzugefügt! Viel Spaß!")
+                    display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
+
+                else:
+                    display_message = bot.sendMessage(chat_id, "Bitte gibt das korrekte Passwort ein. Wenn du nicht weiter weißt, wende dich an " + SUPPORTTEAM + ".")
 
             # Menüs
             elif menue == "Hauptmenü":
@@ -608,6 +640,8 @@ def handle(msg):
                     bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.\n" + const.mitarbeiterpreise, reply_markup=build_keyboard_menu(const.menu_make_debts))
 
                 elif button == "Alles zahlen":
+                    betrag = 0 - users[str(chat_id)]["schulden"]
+                    kraken.store_debts(betrag)
                     users[str(chat_id)]["schulden"] = 0
                     save("Daten/users.json", users)
 
@@ -619,6 +653,7 @@ def handle(msg):
 
                         users[str(chat_id)]["schulden"] = round(users[str(chat_id)]["schulden"] + betrag, 2)
                         save("Daten/users.json", users)
+                        kraken.store_debts(betrag)
 
                         bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.\n" + const.mitarbeiterpreise, reply_markup=build_keyboard_menu(const.menu_make_debts))
                     except ValueError:
