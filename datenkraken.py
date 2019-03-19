@@ -14,7 +14,7 @@ class Datenkraken:
         c.execute("""CREATE TABLE debts
         (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
         hour INTEGER, minute INTEGER, second INTEGER,
-        debts REAL)""") # TODO: Will ich die Total debts speichern?
+        debts REAL);""") # TODO: Will ich die Total debts speichern?
 
         conn.close()
 
@@ -24,7 +24,7 @@ class Datenkraken:
         current = datetime.datetime.today()
 
         query = """INSERT INTO debts (year, month, day, hour, minute, second, debts)
-        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})"""
+        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6});"""
         query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, debts)
 
         c.execute(query)
@@ -37,7 +37,7 @@ class Datenkraken:
         c = conn.cursor()
 
         total = 0
-        for transaction in c.execute("SELECT debts FROM debts"):
+        for transaction in c.execute("SELECT debts FROM debts;"):
             total += transaction[0]
 
         conn.close()
@@ -48,7 +48,7 @@ class Datenkraken:
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
-        for entry in c.execute("SELECT * FROM debts"):
+        for entry in c.execute("SELECT * FROM debts;"):
             print(entry)
 
         conn.close()
@@ -64,7 +64,7 @@ class Datenkraken:
         for i in range(8):
             try:
                 query = """SELECT MIN(id) FROM debts WHERE year={} AND month={}
-                AND day={}"""
+                AND day={};"""
                 query = query.format(a_week_ago.year, a_week_ago.month, a_week_ago.day + i)
 
                 id = c.execute(query).fetchone()[0]
@@ -76,7 +76,7 @@ class Datenkraken:
 
         # calculate new debts
         new_debts = 0
-        query = """SELECT (debts) FROM debts WHERE id >= {} AND debts > 0"""
+        query = """SELECT (debts) FROM debts WHERE id >= {} AND debts > 0;"""
         query = query.format(id)
         try:
             results = c.execute(query)
@@ -87,7 +87,7 @@ class Datenkraken:
 
         # calculate payed debts
         payed_debts = 0
-        query = """SELECT (debts) FROM debts WHERE id >= {} AND debts < 0"""
+        query = """SELECT (debts) FROM debts WHERE id >= {} AND debts < 0;"""
         query = query.format(id)
         try:
             results = c.execute(query)
@@ -117,10 +117,46 @@ class Datenkraken:
 
         conn.close()
 
+    def setup_checks(self):
+        """Setup database for check-ins."""
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+
+        c.execute("""CREATE TABLE checks
+        (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
+        hour INTEGER, minute INTEGER, second INTEGER,
+        check_in INTEGER, user TEXT);""") # TODO: Will ich die Total debts speichern?
+
+        conn.close()
+
+    def build_check_text(self):
+        """Returns user readable string with all people checked in right now."""
+
+        # Give me the biggest id for every user.... ==> Ne, das soll lieber der Bot machen
+
+        return "Im Fauuuusteee bist immer nur du."
+
+    def check(self, user, check_in):
+        """Saves check in for one user to the database."""
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+        current = datetime.datetime.today()
+        check_in_int = 1 if check_in else 0
+
+        query = """INSERT INTO checks (year, month, day, hour, minute, second, check_in, user)
+        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"""
+        query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, check_in_int, "'" + user + "'")
+
+        print(query)
+
+        c.execute(query)
+        conn.commit()
+        conn.close()
+
 # Wenn als eigenes script aufgerufen, neuen Kraken und setup
 if __name__ == "__main__":
     kraken = Datenkraken()
 
-    kraken.mail_last_week()
+    kraken.setup_checks()
 
     #kraken.store_debts(3)

@@ -46,7 +46,7 @@ class Constants:
     menu_main = [
         ["Info", "Schlüssel", "Gruppen"],
         ["Schichten", "Einkaufsliste", "Schulden"],
-        ["Hilfe"]
+        ["Hilfe", "Stammtisch", "Check"]
     ]
 
 
@@ -58,6 +58,16 @@ class Constants:
     # TODO: Vielleicht sollte man überdenken, ob wir anstatt dem Zurück/Hauptmenü-Chaos generell immer nur einen Zurück-Button in der untersten Zeile wollen.
     menu_back_main = [
         ["Zurück"],
+        ["Hauptmenü"]
+    ]
+
+    menu_checked_in = [
+        ["Check-out"],
+        ["Hauptmenü"]
+    ]
+
+    menu_checked_out = [
+        ["Check-in"],
         ["Hauptmenü"]
     ]
 
