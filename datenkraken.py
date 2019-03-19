@@ -12,9 +12,9 @@ class Datenkraken:
         c = conn.cursor()
 
         c.execute("""CREATE TABLE debts
-        (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
-        hour INTEGER, minute INTEGER, second INTEGER,
-        debts REAL);""") # TODO: Will ich die Total debts speichern?
+            (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
+            hour INTEGER, minute INTEGER, second INTEGER,
+            debts REAL);""") # TODO: Will ich die Total debts speichern?
 
         conn.close()
 
@@ -24,7 +24,7 @@ class Datenkraken:
         current = datetime.datetime.today()
 
         query = """INSERT INTO debts (year, month, day, hour, minute, second, debts)
-        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6});"""
+            VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6});"""
         query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, debts)
 
         c.execute(query)
@@ -122,10 +122,13 @@ class Datenkraken:
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
-        c.execute("""CREATE TABLE checks
-        (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
-        hour INTEGER, minute INTEGER, second INTEGER,
-        check_in INTEGER, user TEXT);""") # TODO: Will ich die Total debts speichern?
+        # c.execute("""CREATE TABLE checks
+        # (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
+        # hour INTEGER, minute INTEGER, second INTEGER,
+        # check_in INTEGER, user TEXT);""") # TODO: Will ich die Total debts speichern?
+
+        c.execute("""CREATE TABLE checks (id INTEGER PRIMARY KEY, check_in_date TEXT,
+            check_in_time TEXT, check_out_date TEXT, check_out_time TEXT, user TEXT)""")
 
         conn.close()
 
@@ -136,20 +139,33 @@ class Datenkraken:
 
         return "Im Fauuuusteee bist immer nur du."
 
+    # TODO: Problem!! Man kann das System umgehen, indem man auf Telegram seinen Namen ändert!
     def check(self, user, check_in):
         """Saves check in for one user to the database."""
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
-        current = datetime.datetime.today()
-        check_in_int = 1 if check_in else 0
 
-        query = """INSERT INTO checks (year, month, day, hour, minute, second, check_in, user)
-        VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"""
-        query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, check_in_int, "'" + user + "'")
+        # Get last activity
+        try:
+            results = c.execute("""SELECT MAX(id) FROM checks
+                WHERE user = '{0}';""".format(user))
+            id = next(results)[0]
+        except StopIteration:
+            c.execute("""INSERT INTO checks (check_in_date, check_in_time, user)
+                VALUES (date('now'), time('now'), '{0}'');""".format(user))
 
-        print(query)
+        if check_in:
+            c.execute("""INSERT INTO checks (check_in_date, check_in_time, user)
+                VALUES (date('now'), time('now'), '{0}');""".format(user))
+        else:
+            c.execute("""UPDATE checks SET check_out_date = date('now'),
+                check_out_time = time('now') WHERE id = {0};""".format(id))
+            print("hey")
 
-        c.execute(query)
+        # query = """INSERT INTO checks (year, month, day, hour, minute, second, check_in, user)
+        # VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"""
+        # query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, check_in_int, "'" + user + "'")
+
         conn.commit()
         conn.close()
 
