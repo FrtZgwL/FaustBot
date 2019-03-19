@@ -5,27 +5,22 @@ from email.mime.text import MIMEText
 
 class Datenkraken:
 
-    def __init__(self):
-        self.conn = sqlite3.connect("debts.db")
 
-        try:
-            c = self.conn.cursor()
-
-            for obj in c.execute("""SELECT MAX(id) FROM debts"""):
-                print("Max_id: " + str(obj))
-        except sqlite3.OperationalError:
-            print("DATENKRAKEN: Es wurde noch keine Datenbank erstellt. Führe bitte den \"setup\"-Befehl aus")
 
     def setup(self): # TODO: Das in init einbauen
-        c = self.conn.cursor()
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
 
         c.execute("""CREATE TABLE debts
         (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
         hour INTEGER, minute INTEGER, second INTEGER,
         debts REAL)""") # TODO: Will ich die Total debts speichern?
 
+        conn.close()
+
     def store_debts(self, debts):
-        c = self.conn.cursor()
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
         current = datetime.datetime.today()
 
         query = """INSERT INTO debts (year, month, day, hour, minute, second, debts)
@@ -33,40 +28,50 @@ class Datenkraken:
         query = query.format(current.year, current.month, current.day, current.hour, current.minute, current.second, debts)
 
         c.execute(query)
-        self.conn.commit()
+        conn.commit()
+        conn.close()
 
     @property
     def total_balance(self):
-        c = self.conn.cursor()
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
 
         total = 0
         for transaction in c.execute("SELECT debts FROM debts"):
             total += transaction[0]
 
+        conn.close()
+
         return total
 
     def print_all(self):
-        c = self.conn.cursor()
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+
         for entry in c.execute("SELECT * FROM debts"):
             print(entry)
 
+        conn.close()
+
     def mail_last_week(self):
-        c = self.conn.cursor()
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
 
         week = datetime.timedelta(7)
-        day = datetime.timedelta(1)
         a_week_ago = datetime.datetime.today() - week
 
         # Get id of first entry on the day a week ago
-        for i in range(7):
+        for i in range(8):
             try:
                 query = """SELECT MIN(id) FROM debts WHERE year={} AND month={}
                 AND day={}"""
-                query = query.format(a_week_ago.year, a_week_ago.month, a_week_ago.day - (day.days * i)))
+                query = query.format(a_week_ago.year, a_week_ago.month, a_week_ago.day + i)
 
-                id = c.execute(.format().fetchone()[0]
+                id = c.execute(query).fetchone()[0]
+                print("date a week ago:" + a_week_ago.day + i)
                 print("id a week ago: " + str(id))
-
+            except:
+                continue
 
 
         # calculate new debts
@@ -110,8 +115,7 @@ class Datenkraken:
         server.sendmail(sender, targets, msg.as_string())
         server.quit()
 
-    def __del__(self):
-        self.conn.close()
+        conn.close()
 
 # Wenn als eigenes script aufgerufen, neuen Kraken und setup
 if __name__ == "__main__":
