@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 import smtplib
+import csv
 from email.mime.text import MIMEText
 
 class Datenkraken:
@@ -40,6 +41,7 @@ class Datenkraken:
         for transaction in c.execute("SELECT debts FROM debts;"):
             total += transaction[0]
 
+        conn.commit()
         conn.close()
 
         return total
@@ -51,6 +53,7 @@ class Datenkraken:
         for entry in c.execute("SELECT * FROM debts;"):
             print(entry)
 
+        conn.commit()
         conn.close()
 
     def mail_last_week(self):
@@ -115,6 +118,7 @@ class Datenkraken:
         server.sendmail(sender, targets, msg.as_string())
         server.quit()
 
+        conn.commit()
         conn.close()
 
     def setup_checks(self):
@@ -130,6 +134,7 @@ class Datenkraken:
         c.execute("""CREATE TABLE checks (id INTEGER PRIMARY KEY, check_in_date TEXT,
             check_in_time TEXT, check_out_date TEXT, check_out_time TEXT, user TEXT)""")
 
+        conn.commit()
         conn.close()
 
     def build_check_text(self):
@@ -138,6 +143,19 @@ class Datenkraken:
         # Give me the biggest id for every user.... ==> Ne, das soll lieber der Bot machen
 
         return "Im Fauuuusteee bist immer nur du."
+
+    def write_checks(self):
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+
+        results = c.execute("""SELECT * FROM checks;""")
+
+        with open("checks.csv", "w", newline="") as f:
+            writer = csv.writer(f, dialect="excel")
+            writer.writerows(results)
+
+        conn.commit()
+        conn.close()
 
     # TODO: Problem!! Man kann das System umgehen, indem man auf Telegram seinen Namen ändert!
     def check(self, user, check_in):
@@ -160,7 +178,6 @@ class Datenkraken:
         else:
             c.execute("""UPDATE checks SET check_out_date = date('now'),
                 check_out_time = time('now') WHERE id = {0};""".format(id))
-            print("hey")
 
         # query = """INSERT INTO checks (year, month, day, hour, minute, second, check_in, user)
         # VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"""
@@ -173,6 +190,6 @@ class Datenkraken:
 if __name__ == "__main__":
     kraken = Datenkraken()
 
-    kraken.setup_checks()
+    kraken.write_checks()
 
     #kraken.store_debts(3)
