@@ -1,3 +1,7 @@
 # Ignoriere Daten
 
 Daten/
+.DS_Store
+.Ulysses-Group.plist
+Backup/
+__pycache__/
