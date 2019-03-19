@@ -627,6 +627,9 @@ def handle(msg):
                             kraken.check(build_name(msg), False)
                             users[str(chat_id)]["is_checked_in"] = False
                             bot.sendMessage(chat_id, kraken.build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
+                    elif button == "Daten":
+                        kraken.write_checks()
+                        bot.sendDocument(chat_id, open("checks.csv", "rb"))
 
 
 ########################################################

@@ -170,14 +170,14 @@ class Datenkraken:
             id = next(results)[0]
         except StopIteration:
             c.execute("""INSERT INTO checks (check_in_date, check_in_time, user)
-                VALUES (date('now'), time('now'), '{0}'');""".format(user))
+                VALUES (date('now'), time('now', 'localtime'), '{0}'');""".format(user))
 
         if check_in:
             c.execute("""INSERT INTO checks (check_in_date, check_in_time, user)
-                VALUES (date('now'), time('now'), '{0}');""".format(user))
+                VALUES (date('now'), time('now', 'localtime'), '{0}');""".format(user))
         else:
             c.execute("""UPDATE checks SET check_out_date = date('now'),
-                check_out_time = time('now') WHERE id = {0};""".format(id))
+                check_out_time = time('now', 'localtime') WHERE id = {0};""".format(id))
 
         # query = """INSERT INTO checks (year, month, day, hour, minute, second, check_in, user)
         # VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"""

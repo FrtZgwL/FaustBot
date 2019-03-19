@@ -62,12 +62,12 @@ class Constants:
     ]
 
     menu_checked_in = [
-        ["Check-out"],
+        ["Check-out", "Daten"],
         ["Hauptmenü"]
     ]
 
     menu_checked_out = [
-        ["Check-in"],
+        ["Check-in", "Daten"],
         ["Hauptmenü"]
     ]
 
