@@ -1,3 +1,8 @@
 # Ignoriere Daten
 
 Daten/
+__pycache__/
+checks.csv
+checks.db
+debts.db
+test.txt
