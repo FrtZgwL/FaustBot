@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 import smtplib
+import csv
 from email.mime.text import MIMEText
 
 class Datenkraken:
@@ -122,19 +123,38 @@ class Datenkraken:
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
+        # c.execute("""CREATE TABLE checks
+        #(id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
+        #hour INTEGER, minute INTEGER, second INTEGER,
+        #check_in INTEGER, user TEXT);""")
+        # TODO: Will ich die Total debts speichern?
+
         c.execute("""CREATE TABLE checks
-        (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
+        (id INTEGER PRIMARY KEY, DATE INTEGER, month INTEGER, year INTEGER,
         hour INTEGER, minute INTEGER, second INTEGER,
-        check_in INTEGER, user TEXT);""") # TODO: Will ich die Total debts speichern?
+        check_in INTEGER, user TEXT);""")
 
         conn.close()
 
     def build_check_text(self):
         """Returns user readable string with all people checked in right now."""
 
-        # Give me the biggest id for every user.... ==> Ne, das soll lieber der Bot machen
 
         return "Im Fauuuusteee bist immer nur du."
+
+    def write_checks(self):
+        """Writes all check-ins and outs to 'checks.csv'."""
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+
+        with open('checks.csv', 'w', newline='') as f:
+            start_table = c.execute("SELECT * FROM checks")
+            final_table =
+
+            writer = csv.writer(f)
+            writer.writerows(start_table)
+
+        conn.close()
 
     def check(self, user, check_in):
         """Saves check in for one user to the database."""
@@ -157,6 +177,6 @@ class Datenkraken:
 if __name__ == "__main__":
     kraken = Datenkraken()
 
-    kraken.setup_checks()
+    kraken.write_checks()
 
     #kraken.store_debts(3)
