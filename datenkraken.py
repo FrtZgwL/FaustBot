@@ -140,11 +140,11 @@ class Datenkraken:
     def build_check_text(self):
         """Returns user readable string with all people checked in right now."""
 
-        # Give me the biggest id for every user.... ==> Ne, das soll lieber der Bot machen
 
         return "Im Fauuuusteee bist immer nur du."
 
     def write_checks(self):
+        """Writes all check-ins and outs to 'checks.csv'."""
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
@@ -158,6 +158,7 @@ class Datenkraken:
         conn.close()
 
     # TODO: Problem!! Man kann das System umgehen, indem man auf Telegram seinen Namen ändert!
+
     def check(self, user, check_in):
         """Saves check in for one user to the database."""
         conn = sqlite3.connect("debts.db")

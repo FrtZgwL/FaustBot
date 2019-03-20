@@ -6,3 +6,7 @@ checks.csv
 checks.db
 debts.db
 test.txt
+.DS_Store
+.Ulysses-Group.plist
+Backup/
+__pycache__/
