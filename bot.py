@@ -14,6 +14,7 @@ from constants import Constants as const
 # Eigene
 import debts
 import datenkraken
+import user
 
 # Temporär?
 import pprint
@@ -79,9 +80,9 @@ with open("Daten/schulden.bin", "rb") as f:
 # ---   Funktionen  --- #
 #########################
 
-def save(pfad, obj):
+def save(pfad, obj, encoder=None):
     with open(pfad, "w") as f:
-        f.write(json.dumps(obj, indent=2, sort_keys=True))
+        f.write(json.dumps(obj, indent=2, sort_keys=True, cls=encoder))
 
 # TODO: Inkonsistent
 def pickle_save(pfad, obj):
