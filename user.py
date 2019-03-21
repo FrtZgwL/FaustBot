@@ -3,9 +3,9 @@ from json import JSONEncoder
 
 class User:
 
-    def __init__(self, id):
-        self.id = id
-        self.display_message = None
+    def __init__(self, **kwargs):
+        self.id = None
+        self.display_message = ""
         self.forward_to = None
 
         self.is_admin = False

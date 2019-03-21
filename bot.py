@@ -55,7 +55,13 @@ with open("Daten/menüs.json", "r") as f:
     menüs = json.load(f)
 
 with open("Daten/users.json", "r") as f:
-    users = json.load(f)
+    user_dict = json.load(f)
+
+    for user in user_dict:
+        temp_user = User()
+        temp_user.__dict__.update(user)
+        users[user["id"]] = temp_user
+
 
 with open("Daten/data.json", "r") as f:
     data = json.load(f)
