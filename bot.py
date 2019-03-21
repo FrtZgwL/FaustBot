@@ -14,7 +14,7 @@ from constants import Constants as const
 # Eigene
 import debts
 import datenkraken
-import user
+import userm
 
 # Temporär?
 import pprint
@@ -58,9 +58,13 @@ with open("Daten/users.json", "r") as f:
     user_dict = json.load(f)
 
     for user in user_dict:
-        temp_user = User()
-        temp_user.__dict__.update(user)
-        users[user["id"]] = temp_user
+        # Create user
+        temp_user = userm.User()
+        temp_user.__dict__.update(user_dict[user])
+        temp_user.id = user
+
+        # Save user in dict
+        users[temp_user.id] = temp_user
 
 
 with open("Daten/data.json", "r") as f:
