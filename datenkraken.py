@@ -140,7 +140,6 @@ class Datenkraken:
     def build_check_text(self):
         """Returns user readable string with all people checked in right now."""
 
-
         return "Im Fauuuusteee bist immer nur du."
 
     def write_checks(self):

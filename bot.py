@@ -97,6 +97,13 @@ def build_key_text():
 
     return key_text
 
+def build_check_text():
+    check_text = "Im Faust sind:\n"
+
+    for user in users:
+        if users[user]["is_checked_id"]:
+            check_text += "- " + users[user]["name"] + "\n"
+
 def build_name(msg):
     if msg["chat"]["type"] == "private":
         return msg["from"]["first_name"] + (" " + msg["chat"]["last_name"] if "last_name" in msg["chat"] else "")
@@ -411,9 +418,9 @@ def handle(msg):
                             user_is_checked_in = False
 
                         if user_is_checked_in:
-                            bot.sendMessage(chat_id, kraken.build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
+                            bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
                         else:
-                            bot.sendMessage(chat_id, kraken.build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
+                            bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
 
                     else:
                         bot.sendMessage(chat_id, "Ups! Irgendwas ist schiefgelaufen! Tippe auf \"Hilfe\", um Hilfe zu erhalten.", reply_markup=build_keyboard_menu(const.menu_main))
@@ -619,14 +626,14 @@ def handle(msg):
                         else:
                             kraken.check(build_name(msg), True)
                             users[str(chat_id)]["is_checked_in"] = True
-                            bot.sendMessage(chat_id, kraken.build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
+                            bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
                     elif button == "Check-out":
                         if not users[str(chat_id)]["is_checked_in"]:
                             bot.sendMessage(chat_id, "Du bist schon ausgechecked!!")
                         else:
                             kraken.check(build_name(msg), False)
                             users[str(chat_id)]["is_checked_in"] = False
-                            bot.sendMessage(chat_id, kraken.build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
+                            bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
                     elif button == "Daten":
                         kraken.write_checks()
                         bot.sendDocument(chat_id, open("checks.csv", "rb"))
