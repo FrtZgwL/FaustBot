@@ -72,8 +72,8 @@ with open("Daten/config.json", "r") as f:
     ADMIN_PASSWORT = config["adminpasswort"]
     TOKEN = config["token"]
 
-with open("Daten/schulden.bin", "rb") as f:
-    bank = pickle.load(f)
+# with open("Daten/schulden.bin", "rb") as f:
+#    bank = pickle.load(f)
 
 #########################
 # ---   Funktionen  --- #
