@@ -348,12 +348,6 @@ def handle(msg):
 
                         bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
 
-                    elif menue == "schulden/begleichen":
-                        debt(chat_id, msg_id, callback_id)
-
-                    elif menue == "info/löschen":
-                        info(chat_id, msg_id, callback_id)
-
                 elif menue == "Passwort":
 
                     # if hashlib.sha256(button.encode()).hexdigest() == PASSWORT: TODO: Sicheres System zum Laufen bringen

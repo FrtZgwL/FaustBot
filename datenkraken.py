@@ -6,9 +6,7 @@ from email.mime.text import MIMEText
 
 class Datenkraken:
 
-
-
-    def setup(self): # TODO: Das in init einbauen
+    def setup_debts(self): # TODO: Das in init einbauen
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
@@ -17,6 +15,16 @@ class Datenkraken:
             hour INTEGER, minute INTEGER, second INTEGER,
             debts REAL);""") # TODO: Will ich die Total debts speichern?
 
+        conn.close()
+
+    def setup_checks(self):
+        """Setup database for check-ins."""
+        conn = sqlite3.connect("debts.db")
+        c = conn.cursor()
+
+        c.execute("""CREATE TABLE checks (id INTEGER PRIMARY KEY, check_in_date TEXT, check_in_time TEXT, check_out_date TEXT, check_out_time TEXT, user TEXT)""")
+
+        conn.commit()
         conn.close()
 
     def store_debts(self, debts):
@@ -46,7 +54,7 @@ class Datenkraken:
 
         return total
 
-    def print_all(self):
+    def print_all_debts(self):
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
@@ -120,27 +128,6 @@ class Datenkraken:
 
         conn.commit()
         conn.close()
-
-    def setup_checks(self):
-        """Setup database for check-ins."""
-        conn = sqlite3.connect("debts.db")
-        c = conn.cursor()
-
-        # c.execute("""CREATE TABLE checks
-        # (id INTEGER PRIMARY KEY, day INTEGER, month INTEGER, year INTEGER,
-        # hour INTEGER, minute INTEGER, second INTEGER,
-        # check_in INTEGER, user TEXT);""") # TODO: Will ich die Total debts speichern?
-
-        c.execute("""CREATE TABLE checks (id INTEGER PRIMARY KEY, check_in_date TEXT,
-            check_in_time TEXT, check_out_date TEXT, check_out_time TEXT, user TEXT)""")
-
-        conn.commit()
-        conn.close()
-
-    def build_check_text(self):
-        """Returns user readable string with all people checked in right now."""
-
-        return "Im Fauuuusteee bist immer nur du."
 
     def write_checks(self):
         """Writes all check-ins and outs to 'checks.csv'."""
