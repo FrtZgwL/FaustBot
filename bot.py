@@ -101,8 +101,13 @@ def build_check_text():
     check_text = "Im Faust sind:\n"
 
     for user in users:
-        if users[user]["is_checked_id"]:
+        if users[user]["is_checked_in"]:
             check_text += "- " + users[user]["name"] + "\n"
+
+    if check_text == "Im Faust sind:\n":
+        check_text = "Es ist gerade keiner im Faust."
+
+    return check_text
 
 def build_name(msg):
     if msg["chat"]["type"] == "private":
