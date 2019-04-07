@@ -314,11 +314,7 @@ def handle(msg):
                     display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
 
                 elif button == "Hilfe":
-                    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.\n\nAm einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst, du kannst aber auch immer Nachrichten an die Gruppen senden, indem du mir eine Nachricht sendest, die mit dem Tag der Gruppe beginnt. Es gibt diese Gruppen: "
-
-                    for tag in data["chats"]:
-                        help_str += tag + ", "
-                    help_str = help_str[:-2]
+                    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.Am einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst."
 
                     help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
 
@@ -417,10 +413,7 @@ def handle(msg):
                         users[str(chat_id)]["menue"] = "Check"
                         save("Daten/users.json", users)
 
-                        try: # Das kann weg, sobald alle einmal eingechecked sind
-                            user_is_checked_in = users[str(chat_id)]["is_checked_in"]
-                        except KeyError:
-                            user_is_checked_in = False
+                        user_is_checked_in = users[str(chat_id)]["is_checked_in"]
 
                         if user_is_checked_in:
                             bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
@@ -610,8 +603,16 @@ def handle(msg):
                         users[str(chat_id)]["menue"] = "Einkaufsliste/Entfernen"
                         save("Daten/users.json", users)
 
-                        bot.sendMessage(chat_id, "Welche Artikel willst du entfernen?", reply_markup=build_keyboard_menu(const.menu_back_main))
-                        users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"], const.footer_shoplist_delete))["message_id"]
+                        bot.sendMessage(chat_id, "Welche Artikel willst du entfernen?", reply_markup=build_keyboard_menu(const.menu_delete_all))
+                        users[str(chat_id)]["display_message"] = bot.sendMessage(chat_id, "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"]))["message_id"]
+
+                    elif button == "Alles löschen!":
+                        data["einkaufsliste"] = []
+                        save("Daten/data.json", data)
+                        users[str(chat_id)]["menue"] = "Einkaufsliste"
+                        save("Daten/users.json", users)
+
+                        bot.sendMessage(chat_id, "Auf der Einkaufsliste stehen:", reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
 
                     else: # TODO: Dopplung mit "Einkaufsliste/Hinzufügen"
                         artikel = txt + " (von " + users[str(chat_id)]["name"] + ")"
@@ -715,25 +716,14 @@ def handle(msg):
 
         elif menue[:23] == "Einkaufsliste/Entfernen":
 
-            if button == "alleslöschen":
-                bot.answerCallbackQuery(callback_id, text="Die Einkaufsliste ist jetzt leer.", show_alert=True)
+            for item in data["einkaufsliste"].copy():
+                if button == item:
+                    data["einkaufsliste"].remove(item)
+                    save("Daten/data.json", data)
 
-                data["einkaufsliste"] = []
-                save("Daten/data.json", data)
-                users[str(chat_id)]["menue"] = "Einkaufsliste"
-                save("Daten/users.json", users)
+                    bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
 
-                bot.sendMessage(chat_id, "Auf der Einkaufsliste stehen:", reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
-
-            else:
-                for item in data["einkaufsliste"].copy():
-                    if button == item:
-                        data["einkaufsliste"].remove(item)
-                        save("Daten/data.json", data)
-
-                        bot.answerCallbackQuery(callback_id, text = item + " wurde von der Einkaufsliste gelöscht. Tippe weitere Artikel an, um sie zu löschen.")
-
-                        bot.editMessageText((chat_id, users[str(chat_id)]["display_message"]), "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"], const.footer_shoplist_delete))
+                    bot.editMessageText((chat_id, users[str(chat_id)]["display_message"]), "Tippe Buttons an, um Artikel zu entfernen", reply_markup=build_button_menu(data["einkaufsliste"]))
 
 
 #################################

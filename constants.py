@@ -61,6 +61,11 @@ class Constants:
         ["Hauptmenü"]
     ]
 
+    menu_delete_all = [
+        ["Alles löschen!"],
+        ["Hauptmenü"]
+    ]
+
     menu_checked_in = [
         ["Check-out", "Daten"],
         ["Hauptmenü"]
