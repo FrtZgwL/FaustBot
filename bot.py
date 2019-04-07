@@ -218,7 +218,8 @@ def handle(msg):
                         "is_einkauf":False,
                         "is_admin":False,
                         "is_schlüsselträger":False,
-                        "is_springer":False
+                        "is_springer":False,
+                        "is_checked_in":False
                         }
                         save("Daten/users.json", users)
 
@@ -240,7 +241,7 @@ def handle(msg):
                     else:
                         bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Du musst zuerst das korrekte Passwort eingeben.")
                 else:
-                    bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Du musst zuerst das korrekte Passwort eingeben.")
+                    bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Gib zuerst \"/start\" ein.")
 
             elif "/admin" == txt[:6]:
                 if msg["chat"]["type"] != "private":
@@ -260,7 +261,7 @@ def handle(msg):
                 if not users[str(from_id)]["is_admin"]:
                     bot.sendMessage(chat_id, "Nur admins können neue Gruppen hinzufügen.")
 
-                elif msg["chat"]["type"] != "group":
+                if msg["chat"]["type"] != "group":
                     bot.sendMessage(chat_id, "\"/add\" ist nur dazu da, um _normale Gruppen_ hinzuzufügen.", parse_mode="Markdown")
 
                 else:
@@ -314,7 +315,7 @@ def handle(msg):
                     display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
 
                 elif button == "Hilfe":
-                    help_str = "Ich bin der Faustbot 2.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.Am einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst."
+                    help_str = "Ich bin der Faustbot 3.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.Am einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst."
 
                     help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
 
@@ -407,6 +408,9 @@ def handle(msg):
                         bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
 
                     elif button == "Schichten":
+                        bot.sendMessage(chat_id, "Work in Progress! Sorry, aber das kann ich leider noch nicht. Funktion kommt hoffentlich bald in der Zukunft.")
+
+                    elif button == "Stammtisch":
                         bot.sendMessage(chat_id, "Work in Progress! Sorry, aber das kann ich leider noch nicht. Funktion kommt hoffentlich bald in der Zukunft.")
 
                     elif button == "Check":

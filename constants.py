@@ -109,8 +109,10 @@ class Constants:
 
     # --- GENERAL --- #
 
-    mitarbeiterpreise = """Mitarbeiterpreise:
-Wasser/Tee/Heißgetränke: 0,50€
-Softdrinks: 0,70€
-Bier: 1,00€
-Longdrinks: 1,75€"""
+    mitarbeiterpreise = ""
+
+#    """Mitarbeiterpreise:
+# Wasser/Tee/Heißgetränke: 0,50€
+# Softdrinks: 0,70€
+# Bier: 1,00€
+# Longdrinks: 1,75€"""
