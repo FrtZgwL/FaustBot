@@ -552,7 +552,7 @@ def handle(msg):
                 elif menue[:8] == "Schulden":
 
                     if button == "Schulden begleichen":
-                        bot.sendMessage(chat_id, "Du schuldest dem Faust " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=build_keyboard_menu(const.menu_pay_debts))
+                        bot.sendMessage(chat_id, "Du schuldest dem Faust. " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=build_keyboard_menu(const.menu_pay_debts))
 
                     elif button == "Schulden machen":
                         bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.\n" + const.mitarbeiterpreise, reply_markup=build_keyboard_menu(const.menu_make_debts))
