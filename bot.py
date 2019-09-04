@@ -402,7 +402,7 @@ def handle(msg):
                         bot.sendMessage(chat_id, build_shoplist_text(data), reply_markup=build_keyboard_menu(const.menu_add_remove), parse_mode="Markdown")
 
                     elif button == "Schichten":
-                        bot.sendMessage(chat_id, "Work in Progress! Sorry, aber das kann ich leider noch nicht. Funktion kommt hoffentlich bald in der Zukunft.")
+                        bot.sendMessage(chat_id, "https://docs.google.com/spreadsheets/d/1ySIUnLLq91iJFmyV9DXcNznQ6fNYGcP1WRlE3YDRZec/edit?usp=sharing")
 
                     elif button == "Stammtisch":
                         bot.sendMessage(chat_id, "Work in Progress! Sorry, aber das kann ich leider noch nicht. Funktion kommt hoffentlich bald in der Zukunft.")
@@ -552,7 +552,7 @@ def handle(msg):
                 elif menue[:8] == "Schulden":
 
                     if button == "Schulden begleichen":
-                        bot.sendMessage(chat_id, "Du schuldest dem Faust. " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=build_keyboard_menu(const.menu_pay_debts))
+                        bot.sendMessage(chat_id, "Du schuldest dem Faust " + str(users[str(chat_id)]["schulden"]) + "€. Schick mir den Betrag, den du in die Kasse gezahlt hast, oder tipp auf \"Alles zahlen\"", reply_markup=build_keyboard_menu(const.menu_pay_debts))
 
                     elif button == "Schulden machen":
                         bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.\n" + const.mitarbeiterpreise, reply_markup=build_keyboard_menu(const.menu_make_debts))
