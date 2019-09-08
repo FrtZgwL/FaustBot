@@ -640,7 +640,7 @@ def handle(msg):
                             bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
                     elif button == "Daten":
                         kraken.write_checks()
-                        bot.sendDocument(chat_id, open("checks.csv", "rb"))
+                        bot.sendDocument(chat_id, open("checks.xls", "rb"))
 
 
 ########################################################

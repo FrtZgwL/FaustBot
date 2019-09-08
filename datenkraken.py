@@ -1,7 +1,8 @@
 import sqlite3
 import datetime
 import smtplib
-import csv
+import csv # TODO: Weg!
+import xlwt
 from email.mime.text import MIMEText
 
 class Datenkraken:
@@ -129,19 +130,54 @@ class Datenkraken:
         conn.commit()
         conn.close()
 
+    # def write_checks(self):
+    #     """Writes all check-ins and outs to 'checks.csv'."""
+    #     conn = sqlite3.connect("debts.db")
+    #     c = conn.cursor()
+    #
+    #     results = c.execute("""SELECT * FROM checks;""")
+    #
+    #     with open("checks.csv", "w", newline="") as f:
+    #         writer = csv.writer(f, dialect="excel")
+    #         writer.writerows(results)
+    #
+    #     conn.commit()
+    #     conn.close()
+
     def write_checks(self):
-        """Writes all check-ins and outs to 'checks.csv'."""
+        """Writes all check-ins and outs to 'checks.xls'."""
+
+        # Daten von Datenbank auslesen
         conn = sqlite3.connect("debts.db")
         c = conn.cursor()
 
         results = c.execute("""SELECT * FROM checks;""")
 
-        with open("checks.csv", "w", newline="") as f:
-            writer = csv.writer(f, dialect="excel")
-            writer.writerows(results)
+        # Tabelle erstellen
+        wb = xlwt.Workbook()
+        ws = wb.add_sheet("Schulden")
 
-        conn.commit()
-        conn.close()
+        header = xlwt.easyxf('font: bold on')
+
+        ws.write(0, 0, "ID", header)
+        ws.write(0, 1, "Von Datum", header)
+        ws.write(0, 2, "Bis Datum", header)
+        ws.write(0, 3, "Von Datum", header)
+        ws.write(0, 4, "Bis Datum", header)
+        ws.write(0, 5, "Name", header)
+
+        i = 1
+        for result in results:
+            ws.write(i, 0, result[0])
+            ws.write(i, 1, result[1])
+            ws.write(i, 2, result[2])
+            ws.write(i, 3, result[3])
+            ws.write(i, 4, result[4])
+            ws.write(i, 5, result[5])
+
+            i += 1
+
+        wb.save('checks.xls')
 
     # TODO: Problem!! Man kann das System umgehen, indem man auf Telegram seinen Namen ändert!
 
