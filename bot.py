@@ -201,6 +201,15 @@ def handle(msg):
                 finally:
                     users[str(chat_id)]["menue"] = "Hauptmenü"
 
+            elif users[str(chat_id)]["menue"] == "Gruppen/Springer_Senden":
+                for user in users:
+                    if users[user]["is_springer"]:
+                        bot.forwardMessage(str(user), chat_id, msg["message_id"])
+
+                bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=build_keyboard_menu(const.menu_main))
+
+                users[str(chat_id)]["menue"] = "Hauptmenü"
+
             else:
                 bot.sendMessage(chat_id, "Sorry, aber ich verstehe keine " + content_type + ".\nBitte sende mir nur Text-Nachrichten.")
 
@@ -481,6 +490,15 @@ def handle(msg):
                     finally:
                         users[str(chat_id)]["menue"] = "Hauptmenü"
 
+                elif menue == "Gruppen/Springer_Senden":
+                    for user in users:
+                        if users[user]["is_springer"]:
+                            bot.forwardMessage(str(user), chat_id, msg["message_id"])
+
+                    bot.sendMessage(chat_id, "Deine Nachricht wurde erfolgreich versendet.", reply_markup=build_keyboard_menu(const.menu_main))
+
+                    users[str(chat_id)]["menue"] = "Hauptmenü"
+
                 elif menue[:9] == "Schlüssel":
 
                     if menue == "Schlüssel/Nachricht":
@@ -672,7 +690,7 @@ def handle(msg):
                     bot.sendMessage(chat_id, "Bitte sende mir deine Nachricht, dann leite ich sie an " + data["chats"][tag][1] + " weiter...", reply_markup=build_remove_menu())
 
             if button == "springer":
-                users[str(chat_id)]["modus"] = MO_SPRINGER
+                users[str(chat_id)]["menue"] = "Gruppen/Springer_Senden"
                 save("Daten/users.json", users)
 
                 aktuelle_springer = ""
