@@ -167,6 +167,13 @@ def build_shoplist_text(data):
 
     return list_text
 
+def send_help_message(chat_id):
+    help_str = "Ich bin der Faustbot 3.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.Am einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst."
+
+    help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
+
+    bot.sendMessage(chat_id, help_str, reply_markup=build_keyboard_menu(const.menu_basic, resize_keyboard=True))
+
 def handle(msg):
     global display_message
     global users
@@ -237,7 +244,7 @@ def handle(msg):
             elif "/help" == txt[:5] or "/?" == txt[:2]:
                 if str(chat_id) in users:
                     if users[str(chat_id)]["is_allowed"]:
-                        help_chat(chat_id)
+                        send_help_message(chat_id)
                     else:
                         bot.sendMessage(chat_id, "Nur registrierte Nutzer können diese Funktion nutzen. Du musst zuerst das korrekte Passwort eingeben.")
                 else:
@@ -315,11 +322,7 @@ def handle(msg):
                     display_message = bot.sendMessage(chat_id, "Hauptmenü", reply_markup=build_keyboard_menu(const.menu_main))
 
                 elif button == "Hilfe":
-                    help_str = "Ich bin der Faustbot 3.0! Ich Bot ermögliche dir die Kommunikation zwischen den Gruppen im Café Faust und biete dazu viele weitere Funktionen.Am einfachsten bentzt du mich, indem du dich durch das Hauptmenü klickst."
-
-                    help_str += "\n\nBei Fragen kannst du dich immer gerne an " + SUPPORTTEAM + " wenden."
-
-                    bot.sendMessage(chat_id, help_str, reply_markup=build_keyboard_menu(const.menu_basic, resize_keyboard=True))
+                    send_help_message(chat_id)
 
                 elif button == "Zurück": # TODO: Dopplungen überall! Kann man das nicht klüger machen? TODO: Hab jetzt Hauptmenü statt Zurück??
 
