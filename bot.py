@@ -15,7 +15,7 @@ from constants import Constants as const
 import debts
 import datenkraken
 
-# Temporär?
+# Temporär
 import pprint
 
 
@@ -143,8 +143,7 @@ def build_button_menu(items, footer=None, identifier=""):
     return menu
 
 def build_keyboard_menu(menu, resize_keyboard=True):
-    """Takes a 2D Array with menu buttons
-    Returns a json serialized string of a ReplyKeyboardMarkup object"""
+# --- Takes a 2D Array with menu buttons Returns a json serialized string of a ReplyKeyboardMarkup object --- #
 
     if resize_keyboard:
         string = "{\"keyboard\":" + json.dumps(menu) + ","
@@ -154,11 +153,11 @@ def build_keyboard_menu(menu, resize_keyboard=True):
     return string
 
 def build_remove_menu():
-    """returns a json serialized ReplyKeyboardRemove object"""
+# --- returns a json serialized ReplyKeyboardRemove object --- #
     return "{\"remove_keyboard\":true}"
 
 def build_shoplist_text(data):
-    """returns a user-readable string with all the items on the shoplist."""
+# --- returns a user-readable string with all the items on the shoplist. --- #
 
     list_text = "Auf der Einkaufsliste stehen:"
 
