@@ -1,5 +1,7 @@
 # Ignoriere Daten
 
+.gitignore
+Backups/
 Daten/
 __pycache__/
 checks.csv
