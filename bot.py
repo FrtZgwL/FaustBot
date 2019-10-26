@@ -6,7 +6,6 @@
 import telepot
 import time
 import json
-import pickle
 import hashlib
 from telepot.loop import MessageLoop
 from constants import Constants as const
@@ -72,9 +71,6 @@ with open("Daten/config.json", "r") as f:
     ADMIN_PASSWORT = config["adminpasswort"]
     TOKEN = config["token"]
 
-# with open("Daten/schulden.bin", "rb") as f:
-#    bank = pickle.load(f)
-
 #########################
 # ---   Funktionen  --- #
 #########################
@@ -82,11 +78,6 @@ with open("Daten/config.json", "r") as f:
 def save(pfad, obj):
     with open(pfad, "w") as f:
         f.write(json.dumps(obj, indent=2, sort_keys=True))
-
-# TODO: Inkonsistent
-def pickle_save(pfad, obj):
-    with open(pfad, "wb") as f:
-        pickle.dump(obj, f)
 
 def build_key_text():
     key_text = "Die aktuellen Schlüsselträger sind: Das Faust"
