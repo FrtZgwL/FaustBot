@@ -12,7 +12,6 @@ from constants import Constants as const
 
 # Eigene
 import debts
-import datenkraken
 
 # Temporär
 import pprint
@@ -41,7 +40,6 @@ users = {}
 data = {}
 infotext = ""
 bank = debts.Bank()
-kraken = datenkraken.Datenkraken()
 
 
 
@@ -570,7 +568,6 @@ def handle(msg):
 
                     elif button == "Alles zahlen":
                         betrag = 0 - users[str(chat_id)]["schulden"]
-                        kraken.store_debts(betrag)
                         users[str(chat_id)]["schulden"] = 0
                         save("Daten/users.json", users)
 
@@ -582,7 +579,6 @@ def handle(msg):
 
                             users[str(chat_id)]["schulden"] = round(users[str(chat_id)]["schulden"] + betrag, 2)
                             save("Daten/users.json", users)
-                            kraken.store_debts(betrag)
 
                             bot.sendMessage(chat_id, "Du schuldest dem Faust jetzt " + str(users[str(chat_id)]["schulden"]).replace(".", ",") + "€.\n" + const.mitarbeiterpreise, reply_markup=build_keyboard_menu(const.menu_make_debts))
                         except ValueError:
@@ -639,19 +635,14 @@ def handle(msg):
                         if users[str(chat_id)]["is_checked_in"]:
                             bot.sendMessage(chat_id, "Du bist schon eingechecked!!")
                         else:
-                            kraken.check(build_name(msg), True)
                             users[str(chat_id)]["is_checked_in"] = True
                             bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_in))
                     elif button == "Check-out":
                         if not users[str(chat_id)]["is_checked_in"]:
                             bot.sendMessage(chat_id, "Du bist schon ausgechecked!!")
                         else:
-                            kraken.check(build_name(msg), False)
                             users[str(chat_id)]["is_checked_in"] = False
                             bot.sendMessage(chat_id, build_check_text(), reply_markup=build_keyboard_menu(const.menu_checked_out))
-                    elif button == "Daten":
-                        kraken.write_checks()
-                        bot.sendDocument(chat_id, open("checks.xls", "rb"))
 
 
 ########################################################
