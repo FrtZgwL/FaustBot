@@ -24,7 +24,7 @@ import pprint
 
 # --- Konstanten --- #
 
-SUPPORTTEAM = "@FrtZgwL und @MauriceHaug"
+SUPPORTTEAM = "@FrtZgwL"
 PASSWORT = ""
 ADMIN_PASSWORT = ""
 TOKEN = ""
