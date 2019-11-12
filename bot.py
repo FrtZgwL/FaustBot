@@ -213,7 +213,6 @@ def handle(msg):
                     if str(chat_id) not in users:
                         users[str(chat_id)] = {
                         "name":build_name(msg),
-                        "modus":"",
                         "menue":"Passwort",
                         "current_group":"",
                         "schulden":0.0,
@@ -301,18 +300,15 @@ def handle(msg):
                 # Wenn noch kein Nutzer, Fehlermeldung und rausschmeißen
                 if str(msg["from"]["id"]) not in users:
                     bot.sendMessage(msg["chat"]["id"], "Du bist noch nicht als Nutzer eingetragen. Starte den chat mit dem Bot durch \"/start\" und gib das Passwort ein.")
-                else:
-                    modus = users[str(chat_id)]["modus"]
 
                 # Variablen erstellen
-                modus = 0
                 menue = users[str(chat_id)]["menue"]
 
                 # --- TASTATURBUTTON INTERAKTION --- #
                 button = txt
 
                 # General buttons
-                if button == "Hauptmenü":
+                if (button == "Hauptmenü") and not (menue == "Passwort"):
                     users[str(chat_id)]["menue"] = "Hauptmenü"
                     save("Daten/users.json", users)
 
@@ -321,7 +317,7 @@ def handle(msg):
                 elif button == "Hilfe":
                     send_help_message(chat_id)
 
-                elif button == "Zurück": # TODO: Dopplungen überall! Kann man das nicht klüger machen? TODO: Hab jetzt Hauptmenü statt Zurück??
+                elif (button == "Zurück") and not (menue == "Passwort"): # TODO: Dopplungen überall! Kann man das nicht klüger machen? TODO: Hab jetzt Hauptmenü statt Zurück??
 
                     if menue == "Info/Anzeigen":
                         # TODO: Das ist das selbe wie der Hauptmenü-Button. Hier müssen wir also ein besseres System finden. Vielleicht auch unten auf Zurück-Buttons reagieren?
